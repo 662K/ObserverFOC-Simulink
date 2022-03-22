@@ -18,16 +18,37 @@ typedef struct{
 typedef struct{
     uint8_t Spd_Tick;
     double Theta_Pre;
-    double PresentSpd;
-    double TargetSpd;
+    
+    double Spd;
 
+    double Id;
+    double Iq;
+
+    double CurTs;
+    double SpdTs;
+
+    double Ud;
+    double Uq;
+
+    uint8_t Mode;
+}ControlCommand_str;
+
+typedef struct{
+    double Ls;
+    double Rs;
+    double Kt;
+    double J;
+    uint8_t Np;
+}MotorParameter_str;
+
+typedef struct{
     double Theta;
+    double Spd;
+
+    double Udc;
 
     double SinTheta;
     double CosTheta; 
-
-    double TargetId;
-    double TargetIq;
 
     double Ux;       
     double Uy;
@@ -37,10 +58,6 @@ typedef struct{
     double U3;       
 
     uint8_t Sector;
-
-    double Udc;
-    double CurTs;
-    double SpdTs;
 
     double CCRa;
     double CCRb; 
@@ -52,37 +69,29 @@ typedef struct{
     double Ix;       
     double Iy;
 
-    double PresentId;
-    double PresentIq;
-
-    double PresentUd;
-    double PresentUq;
-
-    double TargetUd;
-    double TargetUq;
-
-    uint8_t Mode;
-}DataIO_str;
-
-typedef struct{
-    double Ls;
-    double Rs;
-    double Kt;
-    double J;
-    uint8_t Np;
-}MotorParameter_str;
-
-typedef struct{
     double Id;
     double Iq;
-    double Id_delay;
-    double Iq_delay;
+
+    double Ud;
+    double Uq;
+}MotorRealTimeInformation_str;
+
+typedef struct{
+    double Te;
+    double TL;
+    double Acc;
+    double Spd;
+    double Spd_Temp;
+    double Spd_Pre;
+    double Theta;
+    double Theta_Pre;
+    PI_str Spd_PI;
 }MotorObserver_str;
 
 #define PI acos(-1)
 
 extern double GetTheta(int32_t Theta);
 extern double GetCur(int32_t Cur);
-extern void FOC(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, DataIO_str* DataIO, MotorParameter_str* MotorParameter, MotorObserver_str* MotorObserver, PI_str* ObserverD_PI, PI_str* ObserverQ_PI);
+extern void FOC(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_str* CtrlCom, MotorParameter_str* MotorParameter, MotorObserver_str* MotorObserver, MotorRealTimeInformation_str* MRT_Inf);
 
 #endif

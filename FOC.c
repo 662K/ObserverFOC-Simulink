@@ -122,58 +122,77 @@ void GetSpd(double Theta, double* Theta_Pre, uint8_t Spd_Tick, double* Speed, do
     }
 }
 
-void FOC(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, DataIO_str* DataIO, MotorParameter_str* MotorParameter, MotorObserver_str* MotorObserver, PI_str* ObserverD_PI, PI_str* ObserverQ_PI){
-    Spd_Timer(&(DataIO->Spd_Tick));
+double ThetaObsPID_Control(PI_str* pPI, double Target, double Present){
+    double Error = Target - Present;
 
-    double ThetaE = GetThetaE(DataIO->Theta, MotorParameter->Np);
+    if(Error > PI)
+        Error -= 2*PI;
+    else if(Error < -PI)
+        Error += 2*PI;
+
+    uint8_t ui_flag = !(((pPI->Out_temp > pPI->Max) || (pPI->Out_temp < -pPI->Max)) && (pPI->Out_temp * Error >= 0));
     
-    GetSpd(DataIO->Theta, &DataIO->Theta_Pre, DataIO->Spd_Tick, &DataIO->PresentSpd, DataIO->SpdTs);
-    Cordic(ThetaE, &DataIO->SinTheta, &DataIO->CosTheta);
-    Clarke(DataIO->Ia, DataIO->Ic, &DataIO->Ix, &DataIO->Iy);
-    Park(DataIO->Ix, DataIO->Iy, DataIO->SinTheta, DataIO->CosTheta, &DataIO->PresentId, &DataIO->PresentIq);
+    pPI->up = pPI->Kp * Error;
+    pPI->ui = pPI->ui + pPI->Ki * Error * ui_flag;
     
-    if(DataIO->Mode == 2){
-        if(DataIO->Spd_Tick == 0){
-            DataIO->TargetId = 0;
-            DataIO->TargetIq = PID_Control(Spd_PI, DataIO->TargetSpd, DataIO->PresentSpd);
+    pPI->Out_temp = pPI->up + pPI->ui;
+    
+    double PIout = 0;
+    
+    if(pPI->Out_temp > pPI->Max)
+        PIout = pPI->Max;
+    else if(pPI->Out_temp < -pPI->Max)
+        PIout = -pPI->Max;
+    else 
+        PIout = pPI->Out_temp;
+    
+    return PIout;
+}
+
+void FOC(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_str* CtrlCom, MotorParameter_str* MotorParameter, MotorObserver_str* MotorObserver, MotorRealTimeInformation_str* MRT_Inf){
+    Spd_Timer(&(CtrlCom->Spd_Tick));
+
+    double ThetaE = GetThetaE(MRT_Inf->Theta, MotorParameter->Np);
+    
+    GetSpd(MRT_Inf->Theta, &CtrlCom->Theta_Pre, CtrlCom->Spd_Tick, &MRT_Inf->Spd, CtrlCom->SpdTs);
+    Cordic(ThetaE, &MRT_Inf->SinTheta, &MRT_Inf->CosTheta);
+    Clarke(MRT_Inf->Ia, MRT_Inf->Ic, &MRT_Inf->Ix, &MRT_Inf->Iy);
+    Park(MRT_Inf->Ix, MRT_Inf->Iy, MRT_Inf->SinTheta, MRT_Inf->CosTheta, &MRT_Inf->Id, &MRT_Inf->Iq);
+    
+    if(CtrlCom->Mode == 2){
+        if(CtrlCom->Spd_Tick == 0){
+            CtrlCom->Id = 0;
+            CtrlCom->Iq = PID_Control(Spd_PI, CtrlCom->Spd, MotorObserver->Spd);
         }
     }
 
-    if((DataIO->Mode == 1) || (DataIO->Mode == 2)){
-        DataIO->PresentUd = PID_Control(D_PI, DataIO->TargetId, MotorObserver->Id); //DataIO->PresentId
-        DataIO->PresentUq = PID_Control(Q_PI, DataIO->TargetIq, MotorObserver->Iq); //DataIO->PresentIq
+    MotorObserver->Te = CtrlCom->Iq * MotorParameter->Kt;
+    MotorObserver->TL = PID_Control(&(MotorObserver->Spd_PI), MRT_Inf->Spd, MotorObserver->Spd_Pre);
+    MotorObserver->Acc = (MotorObserver->Te + MotorObserver->TL) / MotorParameter->J;
+    if(CtrlCom->Spd_Tick == 0)
+        MotorObserver->Spd_Pre = MotorObserver->Spd_Temp;
+    if(CtrlCom->Spd_Tick == 5)
+        MotorObserver->Spd_Temp = MotorObserver->Spd;
+    MotorObserver->Spd = MotorObserver->Spd + MotorObserver->Acc * CtrlCom->CurTs;
+
+
+    if((CtrlCom->Mode == 1) || (CtrlCom->Mode == 2)){
+        MRT_Inf->Ud = PID_Control(D_PI, CtrlCom->Id, MRT_Inf->Id);
+        MRT_Inf->Uq = PID_Control(Q_PI, CtrlCom->Iq, MRT_Inf->Iq);
     }
 
-    double Ud = DataIO->PresentUd + DataIO->TargetUd;
-    double Uq = DataIO->PresentUq + DataIO->TargetUq;
+    MRT_Inf->Ud = MRT_Inf->Ud + CtrlCom->Ud;
+    MRT_Inf->Uq = MRT_Inf->Uq + CtrlCom->Uq;
 
-    /**********观测电流补偿************/
-    ObserverD_PI->Kp = 0.5;
-    ObserverD_PI->Ki = ObserverD_PI->Kp * 2 * PI / DataIO->CurTs / 5 * DataIO->CurTs;
-    ObserverD_PI->Max = 27;
+    // /**********速度前馈解耦************/
+    // double SpeedE = CtrlCom->Spd * MotorParameter->Np;
+    // double Flux = MotorParameter->Kt / MotorParameter->Np / 1.5;
 
-    ObserverQ_PI->Kp = 0.5;
-    ObserverQ_PI->Ki = ObserverQ_PI->Kp * 2 * PI / DataIO->CurTs / 5 * DataIO->CurTs;
-    ObserverQ_PI->Max = 27;
-    
-    Ud = Ud + PID_Control(ObserverD_PI, DataIO->PresentId, MotorObserver->Id_delay);
-    Uq = Uq + PID_Control(ObserverQ_PI, DataIO->PresentIq, MotorObserver->Iq_delay);
+    // MRT_Inf->Ud = MRT_Inf->Ud - SpeedE * MotorParameter->Ls * MRT_Inf->Iq;
+    // MRT_Inf->Uq = MRT_Inf->Uq + (Flux  + MotorParameter->Ls * MRT_Inf->Id) * SpeedE;
 
-    /**********速度前馈解耦************/
-    double SpeedE = DataIO->TargetSpd * MotorParameter->Np;
-    double Flux = MotorParameter->Kt / MotorParameter->Np / 1.5;
-
-    Ud = Ud - SpeedE * MotorParameter->Ls * MotorObserver->Iq;
-    Uq = Uq + (Flux + MotorParameter->Ls * MotorObserver->Id) * SpeedE;
-
-    /**********dq轴电流观测************/
-    MotorObserver->Id_delay = MotorObserver->Id;
-    MotorObserver->Iq_delay = MotorObserver->Iq;
-    MotorObserver->Id = MotorObserver->Id + (DataIO->CurTs / MotorParameter->Ls) * (Ud - MotorParameter->Rs * MotorObserver->Id);
-    MotorObserver->Iq = MotorObserver->Iq + (DataIO->CurTs / MotorParameter->Ls) * (Uq - MotorParameter->Rs * MotorObserver->Iq);
-
-    InvPark(DataIO->PresentUd, DataIO->PresentUq, DataIO->SinTheta, DataIO->CosTheta, &DataIO->Ux, &DataIO->Uy);
-    InvClarke(DataIO->Ux, DataIO->Uy, &DataIO->U1, &DataIO->U2, &DataIO->U3);
-    DataIO->Sector = GetSector(DataIO->U1, DataIO->U2, DataIO->U3);
-    GetCCR(DataIO->U1, DataIO->U2, DataIO->U3, DataIO->Sector, DataIO->Udc, &DataIO->CCRa, &DataIO->CCRb, &DataIO->CCRc);
+    InvPark(MRT_Inf->Ud, MRT_Inf->Uq, MRT_Inf->SinTheta, MRT_Inf->CosTheta, &MRT_Inf->Ux, &MRT_Inf->Uy);
+    InvClarke(MRT_Inf->Ux, MRT_Inf->Uy, &MRT_Inf->U1, &MRT_Inf->U2, &MRT_Inf->U3);
+    MRT_Inf->Sector = GetSector(MRT_Inf->U1, MRT_Inf->U2, MRT_Inf->U3);
+    GetCCR(MRT_Inf->U1, MRT_Inf->U2, MRT_Inf->U3, MRT_Inf->Sector, MRT_Inf->Udc, &MRT_Inf->CCRa, &MRT_Inf->CCRb, &MRT_Inf->CCRc);
 }

@@ -6,26 +6,24 @@
 
 PI_str D_PI  = {0};
 PI_str Q_PI  = {0};
-PI_str ObserverD_PI = {0};
-PI_str ObserverQ_PI = {0};
 PI_str Spd_PI  = {0};
-DataIO_str DataIO = {0};
+ControlCommand_str CtrlCom = {0};
 MotorParameter_str MotorParameter = {0};
 MotorObserver_str MotorObserver = {0};
+MotorRealTimeInformation_str MRT_Inf = {0};
 
 /* 模块初始化函数 */
 static void mdlInitializeSizes(SimStruct *S)
 {
     memset(&D_PI, 0, sizeof(D_PI));
     memset(&Q_PI, 0, sizeof(Q_PI));
-    memset(&ObserverD_PI, 0, sizeof(ObserverD_PI));
-    memset(&ObserverQ_PI, 0, sizeof(ObserverQ_PI));
     memset(&Spd_PI, 0, sizeof(Spd_PI));
-    memset(&DataIO, 0, sizeof(DataIO));
+    memset(&CtrlCom, 0, sizeof(CtrlCom));
     memset(&MotorParameter, 0, sizeof(MotorParameter));
     memset(&MotorObserver, 0, sizeof(MotorObserver));
+    memset(&MRT_Inf, 0, sizeof(MRT_Inf));
     /* 设置参数数量 */
-    ssSetNumSFcnParams(S, 14);
+    ssSetNumSFcnParams(S, 17);
 
     ssSetSFcnParamTunable(S,  0, 1);
     ssSetSFcnParamTunable(S,  1, 1);
@@ -41,6 +39,9 @@ static void mdlInitializeSizes(SimStruct *S)
     ssSetSFcnParamTunable(S, 11, 1);
     ssSetSFcnParamTunable(S, 12, 1);
     ssSetSFcnParamTunable(S, 13, 1);
+    ssSetSFcnParamTunable(S, 14, 1);
+    ssSetSFcnParamTunable(S, 15, 1);
+    ssSetSFcnParamTunable(S, 16, 1);
 
     /* 设置输入端口数量 */
     if (!ssSetNumInputPorts(S, 9)) return;
@@ -192,6 +193,9 @@ static void mdlOutputs(SimStruct *S, int_T tid){
     real_T* Rs     = (real_T*) ssGetRunTimeParamInfo(S, 11)->data;
     real_T* Kt     = (real_T*) ssGetRunTimeParamInfo(S, 12)->data;
     real_T* J      = (real_T*) ssGetRunTimeParamInfo(S, 13)->data;
+    real_T* ObsSpdKp  = (real_T*) ssGetRunTimeParamInfo(S,  14)->data;
+    real_T* ObsSpdKi  = (real_T*) ssGetRunTimeParamInfo(S,  15)->data;
+    real_T* ObsTMax = (real_T*) ssGetRunTimeParamInfo(S,  16)->data;
 
     real_T* oSinTheta = (real_T*) ssGetOutputPortSignal(S, 0);
     real_T* oCosTheta = (real_T*) ssGetOutputPortSignal(S, 1);
@@ -226,56 +230,60 @@ static void mdlOutputs(SimStruct *S, int_T tid){
     Spd_PI.Ki  = *SpdKi;
     Spd_PI.Max = *CurMax;
 
+    MotorObserver.Spd_PI.Kp = *ObsSpdKp;
+    MotorObserver.Spd_PI.Ki = *ObsSpdKi;
+    MotorObserver.Spd_PI.Max = *ObsTMax;
+
     MotorParameter.Np = (uint8_t)(*Np);
     MotorParameter.Ls = *Ls;
     MotorParameter.Rs = *Rs;
     MotorParameter.Kt = *Kt;
     MotorParameter.J  = *J;
 
-    DataIO.Mode  = (uint8_t)(*iMode);
-    DataIO.Udc   = *Udc;
-    DataIO.CurTs = *CurTs;
-    DataIO.SpdTs = *SpdTs;
+    CtrlCom.Mode  = (uint8_t)(*iMode);
+    CtrlCom.CurTs = *CurTs;
+    CtrlCom.SpdTs = *SpdTs;
 
-    DataIO.Theta = GetTheta((int32_t)*iTheta);
-    DataIO.Ia = GetCur((int32_t)*iIa);
-    DataIO.Ic = GetCur((int32_t)*iIc);
+    MRT_Inf.Udc   = *Udc;
+    MRT_Inf.Theta = GetTheta((int32_t)*iTheta);
+    MRT_Inf.Ia = GetCur((int32_t)*iIa);
+    MRT_Inf.Ic = GetCur((int32_t)*iIc);
 
-    if(DataIO.Mode == 0){
-        DataIO.TargetUd = *iUd;
-        DataIO.TargetUq = *iUq;
+    if(CtrlCom.Mode == 0){
+        CtrlCom.Ud = *iUd;
+        CtrlCom.Uq = *iUq;
     }
-    else if(DataIO.Mode == 1){
-        DataIO.TargetId = *iId;
-        DataIO.TargetIq = *iIq;
+    else if(CtrlCom.Mode == 1){
+        CtrlCom.Id = *iId;
+        CtrlCom.Iq = *iIq;
     }
-    else if(DataIO.Mode == 2){
-        DataIO.TargetSpd = *iSpd;
+    else if(CtrlCom.Mode == 2){
+        CtrlCom.Spd = *iSpd;
     }
     
     /* 调用函数接口 */
-    FOC(&D_PI, &Q_PI, &Spd_PI, &DataIO, &MotorParameter, &MotorObserver, &ObserverD_PI, &ObserverQ_PI);
+    FOC(&D_PI, &Q_PI, &Spd_PI, &CtrlCom, &MotorParameter, &MotorObserver, &MRT_Inf);
 
-    *oSinTheta = DataIO.SinTheta;
-    *oCosTheta = DataIO.CosTheta;
-    *oUx = DataIO.Ux;
-    *oUy = DataIO.Uy;
-    *oU1 = DataIO.U1;
-    *oU2 = DataIO.U2;
-    *oU3 = DataIO.U3;
-    *oSector = DataIO.Sector;
-    *oCCRa = DataIO.CCRa;
-    *oCCRb = DataIO.CCRb;
-    *oCCRc = DataIO.CCRc;
-    *oIx = DataIO.Ix;
-    *oIy = DataIO.Iy;
-    *oId = DataIO.PresentId;
-    *oIq = DataIO.PresentIq;
-    *oUd = DataIO.PresentUd;
-    *oUq = DataIO.PresentUq;
-    *oSpd = DataIO.PresentSpd;
-    *oObserverId = MotorObserver.Id;
-    *oObserverIq = MotorObserver.Iq;
+    *oSinTheta = MRT_Inf.SinTheta;
+    *oCosTheta = MRT_Inf.CosTheta;
+    *oUx = MRT_Inf.Ux;
+    *oUy = MRT_Inf.Uy;
+    *oU1 = MRT_Inf.U1;
+    *oU2 = MRT_Inf.U2;
+    *oU3 = MRT_Inf.U3;
+    *oSector = MRT_Inf.Sector;
+    *oCCRa = MRT_Inf.CCRa;
+    *oCCRb = MRT_Inf.CCRb;
+    *oCCRc = MRT_Inf.CCRc;
+    *oIx = MRT_Inf.Ix;
+    *oIy = MRT_Inf.Iy;
+    *oId = MRT_Inf.Id;
+    *oIq = MRT_Inf.Iq;
+    *oUd = MRT_Inf.Ud;
+    *oUq = MRT_Inf.Uq;
+    *oSpd = MRT_Inf.Spd;
+    *oObserverId = MotorObserver.Spd_Pre;
+    *oObserverIq = MotorObserver.Spd;
 }
 
 /* 用于存储全局变量和运行时参数，在确定端口的宽度和采样时间后调用 */
@@ -284,7 +292,7 @@ static void mdlOutputs(SimStruct *S, int_T tid){
 static void mdlSetWorkWidths(SimStruct *S)
 {
      /* 设置运行时参数的数量 */
-    if (!ssSetNumRunTimeParams(S, 14)) return;
+    if (!ssSetNumRunTimeParams(S, 17)) return;
 
     /* 注册参数 */
     ssRegDlgParamAsRunTimeParam(S,  0,  0,  "Np",     ssGetDataTypeId(S, "double"));
@@ -301,6 +309,9 @@ static void mdlSetWorkWidths(SimStruct *S)
     ssRegDlgParamAsRunTimeParam(S, 11, 11,  "Rs",     ssGetDataTypeId(S, "double"));
     ssRegDlgParamAsRunTimeParam(S, 12, 12,  "Kt",     ssGetDataTypeId(S, "double"));
     ssRegDlgParamAsRunTimeParam(S, 13, 13,  "J",      ssGetDataTypeId(S, "double"));
+    ssRegDlgParamAsRunTimeParam(S, 14, 14,  "ObsSpdKp",  ssGetDataTypeId(S, "double"));
+    ssRegDlgParamAsRunTimeParam(S, 15, 15,  "ObsSpdKi",  ssGetDataTypeId(S, "double"));
+    ssRegDlgParamAsRunTimeParam(S, 16, 16,  "ObsTMax", ssGetDataTypeId(S, "double"));
 }
 #endif
 
