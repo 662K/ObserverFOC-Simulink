@@ -93,7 +93,7 @@ static void mdlInitializeSizes(SimStruct *S)
     ssSetInputPortRequiredContiguous(S, 8, 1);	
 
     /* 设置输出端口数量 */
-    if (!ssSetNumOutputPorts(S, 20)) return;
+    if (!ssSetNumOutputPorts(S, 21)) return;
 
     /* 配置输出端口 */
     ssSetOutputPortDataType(S, 0, SS_DOUBLE);
@@ -155,6 +155,9 @@ static void mdlInitializeSizes(SimStruct *S)
 
     ssSetOutputPortDataType(S, 19, SS_DOUBLE);
     ssSetOutputPortWidth(S, 19, 1);
+
+    ssSetOutputPortDataType(S, 20, SS_DOUBLE);
+    ssSetOutputPortWidth(S, 20, 1);
 }
 
 /* 模块采样时间初始化函敿 */
@@ -215,8 +218,9 @@ static void mdlOutputs(SimStruct *S, int_T tid){
     real_T* oUd = (real_T*) ssGetOutputPortSignal(S, 15);
     real_T* oUq = (real_T*) ssGetOutputPortSignal(S, 16);
     real_T* oSpd = (real_T*) ssGetOutputPortSignal(S, 17);
-    real_T* oObserverId = (real_T*) ssGetOutputPortSignal(S, 18);
-    real_T* oObserverIq = (real_T*) ssGetOutputPortSignal(S, 19);
+    real_T* oObsSpdBef = (real_T*) ssGetOutputPortSignal(S, 18);
+    real_T* oObsSpd = (real_T*) ssGetOutputPortSignal(S, 19);
+    real_T* oObsTL = (real_T*) ssGetOutputPortSignal(S, 20);
 
     D_PI.Kp    = *CurKp;
     D_PI.Ki    = *CurKi;
@@ -282,8 +286,9 @@ static void mdlOutputs(SimStruct *S, int_T tid){
     *oUd = MRT_Inf.Ud;
     *oUq = MRT_Inf.Uq;
     *oSpd = MRT_Inf.Spd;
-    *oObserverId = MotorObserver.Spd_Pre;
-    *oObserverIq = MotorObserver.Spd;
+    *oObsSpdBef = MotorObserver.Spd_Bef;
+    *oObsSpd = MotorObserver.Spd;
+    *oObsTL = MotorObserver.TL;
 }
 
 /* 用于存储全局变量和运行时参数，在确定端口的宽度和采样时间后调用 */

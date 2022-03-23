@@ -167,13 +167,15 @@ void FOC(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_str* CtrlCom
     }
 
     MotorObserver->Te = CtrlCom->Iq * MotorParameter->Kt;
-    MotorObserver->TL = PID_Control(&(MotorObserver->Spd_PI), MRT_Inf->Spd, MotorObserver->Spd_Pre);
     MotorObserver->Acc = (MotorObserver->Te + MotorObserver->TL) / MotorParameter->J;
-    if(CtrlCom->Spd_Tick == 0)
-        MotorObserver->Spd_Pre = MotorObserver->Spd_Temp;
+    if(CtrlCom->Spd_Tick == 0){
+        MotorObserver->Spd_Bef = MotorObserver->Spd_Temp;
+        MotorObserver->TL = PID_Control(&(MotorObserver->Spd_PI), MRT_Inf->Spd, MotorObserver->Spd_Bef);
+    }
     if(CtrlCom->Spd_Tick == 5)
         MotorObserver->Spd_Temp = MotorObserver->Spd;
-    MotorObserver->Spd = MotorObserver->Spd + MotorObserver->Acc * CtrlCom->CurTs;
+    MotorObserver->Spd = MotorObserver->Spd_Pre;
+    MotorObserver->Spd_Pre = MotorObserver->Spd + MotorObserver->Acc * CtrlCom->CurTs;
 
 
     if((CtrlCom->Mode == 1) || (CtrlCom->Mode == 2)){

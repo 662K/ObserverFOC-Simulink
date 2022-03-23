@@ -82,6 +82,7 @@ typedef struct{
     double Acc;
     double Spd;
     double Spd_Temp;
+    double Spd_Bef;
     double Spd_Pre;
     double Theta;
     double Theta_Pre;
