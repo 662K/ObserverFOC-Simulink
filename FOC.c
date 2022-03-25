@@ -122,18 +122,13 @@ void GetSpd(double Theta, double* Theta_Pre, uint8_t Spd_Tick, double* Speed, do
     }
 }
 
-double ThetaObsPID_Control(PI_str* pPI, double Target, double Present){
-    double Error = Target - Present;
+double ObsPID_Control(PI_str* pPI, double Target, double Present){
+    pPI->Error = Target-Present;
 
-    if(Error > PI)
-        Error -= 2*PI;
-    else if(Error < -PI)
-        Error += 2*PI;
-
-    uint8_t ui_flag = !(((pPI->Out_temp > pPI->Max) || (pPI->Out_temp < -pPI->Max)) && (pPI->Out_temp * Error >= 0));
+    uint8_t ui_flag = !(((pPI->Out_temp > pPI->Max) || (pPI->Out_temp < -pPI->Max)) && (pPI->Out_temp * pPI->Error >= 0));
     
-    pPI->up = pPI->Kp * Error;
-    pPI->ui = pPI->ui + pPI->Ki * Error * ui_flag;
+    pPI->up = pPI->Kp * pPI->Error;
+    pPI->ui = pPI->ui + pPI->Ki * pPI->Error * ui_flag;
     
     pPI->Out_temp = pPI->up + pPI->ui;
     
@@ -149,6 +144,66 @@ double ThetaObsPID_Control(PI_str* pPI, double Target, double Present){
     return PIout;
 }
 
+void SpeedLoopOri_Mode2(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_str* CtrlCom, MotorParameter_str* MotorParameter, MotorRealTimeInformation_str* MRT_Inf){
+    D_PI->Ki *= CtrlCom->CurTs;
+    Q_PI->Ki *= CtrlCom->CurTs;
+    Spd_PI->Ki *= CtrlCom->SpdTs;
+
+    if(CtrlCom->Spd_Tick == 0){
+        CtrlCom->Id = 0;
+        CtrlCom->Iq = PID_Control(Spd_PI, CtrlCom->Spd, MRT_Inf->Spd);
+    }
+
+    MRT_Inf->Ud = PID_Control(D_PI, CtrlCom->Id, MRT_Inf->Id);
+    MRT_Inf->Uq = PID_Control(Q_PI, CtrlCom->Iq, MRT_Inf->Iq);
+}
+
+void SpeedLoopLuenbergerObeserver_Mode3(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_str* CtrlCom, MotorParameter_str* MotorParameter, MotorObserver_str* MotorObserver, MotorRealTimeInformation_str* MRT_Inf){
+    D_PI->Ki *= CtrlCom->CurTs;
+    Q_PI->Ki *= CtrlCom->CurTs;
+    Spd_PI->Ki *= CtrlCom->SpdTs;
+    MotorObserver->Spd_PI.Ki *= CtrlCom->SpdTs;
+    
+    CtrlCom->Id = 0;
+    CtrlCom->Iq = PID_Control(Spd_PI, CtrlCom->Spd, MotorObserver->Spd);
+    MotorObserver->Te = CtrlCom->Iq * MotorParameter->Kt;
+    MotorObserver->Acc = (MotorObserver->Te + MotorObserver->TL) / MotorParameter->J;
+    if(CtrlCom->Spd_Tick == 0){
+        MotorObserver->Spd_Bef = MotorObserver->Spd_Temp;
+        MotorObserver->TL = ObsPID_Control(&(MotorObserver->Spd_PI), MRT_Inf->Spd, MotorObserver->Spd_Bef);
+    }
+    if(CtrlCom->Spd_Tick == 5)
+        MotorObserver->Spd_Temp = MotorObserver->Spd;
+    MotorObserver->Spd = MotorObserver->Spd_Pre;
+    MotorObserver->Spd_Pre = MotorObserver->Spd + MotorObserver->Acc * CtrlCom->CurTs;
+
+    MRT_Inf->Ud = PID_Control(D_PI, CtrlCom->Id, MRT_Inf->Id);
+    MRT_Inf->Uq = PID_Control(Q_PI, CtrlCom->Iq, MRT_Inf->Iq);
+}
+
+void LoadTorqueObeserver_Mode4(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_str* CtrlCom, MotorParameter_str* MotorParameter, MotorObserver_str* MotorObserver, MotorRealTimeInformation_str* MRT_Inf){
+    D_PI->Ki *= CtrlCom->CurTs;
+    Q_PI->Ki *= CtrlCom->CurTs;
+    Spd_PI->Ki *= CtrlCom->SpdTs;
+    MotorObserver->Spd_PI.Ki *= CtrlCom->SpdTs;
+    
+    CtrlCom->Id = 0;
+    CtrlCom->Iq = PID_Control(Spd_PI, CtrlCom->Spd, MotorObserver->Spd);
+    MotorObserver->Te = CtrlCom->Iq * MotorParameter->Kt;
+    MotorObserver->Acc = (MotorObserver->Te) / MotorParameter->J;
+    if(CtrlCom->Spd_Tick == 0){
+        MotorObserver->Spd_Bef = MotorObserver->Spd_Temp;
+        MotorObserver->TL = ObsPID_Control(&(MotorObserver->Spd_PI), MRT_Inf->Spd, MotorObserver->Spd_Bef);
+    }
+    if(CtrlCom->Spd_Tick == 5)
+        MotorObserver->Spd_Temp = MotorObserver->Spd;
+    MotorObserver->Spd = MotorObserver->Spd_Pre;
+    MotorObserver->Spd_Pre = MotorObserver->Spd + MotorObserver->Acc * CtrlCom->CurTs;
+
+    MRT_Inf->Ud = PID_Control(D_PI, CtrlCom->Id, MRT_Inf->Id);
+    MRT_Inf->Uq = PID_Control(Q_PI, CtrlCom->Iq - MotorObserver->TL / MotorParameter->Kt, MRT_Inf->Iq);
+}
+
 void FOC(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_str* CtrlCom, MotorParameter_str* MotorParameter, MotorObserver_str* MotorObserver, MotorRealTimeInformation_str* MRT_Inf){
     Spd_Timer(&(CtrlCom->Spd_Tick));
 
@@ -160,38 +215,14 @@ void FOC(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_str* CtrlCom
     Park(MRT_Inf->Ix, MRT_Inf->Iy, MRT_Inf->SinTheta, MRT_Inf->CosTheta, &MRT_Inf->Id, &MRT_Inf->Iq);
     
     if(CtrlCom->Mode == 2){
-        if(CtrlCom->Spd_Tick == 0){
-            CtrlCom->Id = 0;
-            CtrlCom->Iq = PID_Control(Spd_PI, CtrlCom->Spd, MotorObserver->Spd);
-        }
+        SpeedLoopOri_Mode2(D_PI, Q_PI, Spd_PI, CtrlCom, MotorParameter, MRT_Inf);
     }
-
-    MotorObserver->Te = CtrlCom->Iq * MotorParameter->Kt;
-    MotorObserver->Acc = (MotorObserver->Te + MotorObserver->TL) / MotorParameter->J;
-    if(CtrlCom->Spd_Tick == 0){
-        MotorObserver->Spd_Bef = MotorObserver->Spd_Temp;
-        MotorObserver->TL = PID_Control(&(MotorObserver->Spd_PI), MRT_Inf->Spd, MotorObserver->Spd_Bef);
+    else if(CtrlCom->Mode == 3){
+        SpeedLoopLuenbergerObeserver_Mode3(D_PI, Q_PI, Spd_PI, CtrlCom, MotorParameter, MotorObserver, MRT_Inf);
     }
-    if(CtrlCom->Spd_Tick == 5)
-        MotorObserver->Spd_Temp = MotorObserver->Spd;
-    MotorObserver->Spd = MotorObserver->Spd_Pre;
-    MotorObserver->Spd_Pre = MotorObserver->Spd + MotorObserver->Acc * CtrlCom->CurTs;
-
-
-    if((CtrlCom->Mode == 1) || (CtrlCom->Mode == 2)){
-        MRT_Inf->Ud = PID_Control(D_PI, CtrlCom->Id, MRT_Inf->Id);
-        MRT_Inf->Uq = PID_Control(Q_PI, CtrlCom->Iq, MRT_Inf->Iq);
+    else if(CtrlCom->Mode == 4){
+        LoadTorqueObeserver_Mode4(D_PI, Q_PI, Spd_PI, CtrlCom, MotorParameter, MotorObserver, MRT_Inf);
     }
-
-    MRT_Inf->Ud = MRT_Inf->Ud + CtrlCom->Ud;
-    MRT_Inf->Uq = MRT_Inf->Uq + CtrlCom->Uq;
-
-    // /**********速度前馈解耦************/
-    // double SpeedE = CtrlCom->Spd * MotorParameter->Np;
-    // double Flux = MotorParameter->Kt / MotorParameter->Np / 1.5;
-
-    // MRT_Inf->Ud = MRT_Inf->Ud - SpeedE * MotorParameter->Ls * MRT_Inf->Iq;
-    // MRT_Inf->Uq = MRT_Inf->Uq + (Flux  + MotorParameter->Ls * MRT_Inf->Id) * SpeedE;
 
     InvPark(MRT_Inf->Ud, MRT_Inf->Uq, MRT_Inf->SinTheta, MRT_Inf->CosTheta, &MRT_Inf->Ux, &MRT_Inf->Uy);
     InvClarke(MRT_Inf->Ux, MRT_Inf->Uy, &MRT_Inf->U1, &MRT_Inf->U2, &MRT_Inf->U3);

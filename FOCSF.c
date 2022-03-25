@@ -44,120 +44,72 @@ static void mdlInitializeSizes(SimStruct *S)
     ssSetSFcnParamTunable(S, 16, 1);
 
     /* 设置输入端口数量 */
-    if (!ssSetNumInputPorts(S, 9)) return;
+    if (!ssSetNumInputPorts(S, 6)) return;
 
     /* 配置输入端口 */
     ssSetInputPortDataType(S, 0, SS_DOUBLE);   
     ssSetInputPortWidth(S, 0, 1);
-    ssSetInputPortDirectFeedThrough(S, 0, 1);
-    ssSetInputPortRequiredContiguous(S, 0, 1);
+    ssSetInputPortDirectFeedThrough(S, 0, TRUE);
+    ssSetInputPortRequiredContiguous(S, 0, TRUE);
 
     ssSetInputPortDataType(S, 1, SS_DOUBLE);   
-    ssSetInputPortWidth(S, 1, 1);
-    ssSetInputPortDirectFeedThrough(S, 1, 1);
-    ssSetInputPortRequiredContiguous(S, 1, 1);	
+    ssSetInputPortWidth(S, 1, 2);
+    ssSetInputPortDirectFeedThrough(S, 1, TRUE);
+    ssSetInputPortRequiredContiguous(S, 1, TRUE);	
 
     ssSetInputPortDataType(S, 2, SS_DOUBLE);   
-    ssSetInputPortWidth(S, 2, 1);
-    ssSetInputPortDirectFeedThrough(S, 2, 1);
-    ssSetInputPortRequiredContiguous(S, 2, 1);	
+    ssSetInputPortWidth(S, 2, 3);
+    ssSetInputPortDirectFeedThrough(S, 2, TRUE);
+    ssSetInputPortRequiredContiguous(S, 2, TRUE);	
 
     ssSetInputPortDataType(S, 3, SS_DOUBLE);   
-    ssSetInputPortWidth(S, 3, 1);
-    ssSetInputPortDirectFeedThrough(S, 3, 1);
-    ssSetInputPortRequiredContiguous(S, 3, 1);	
+    ssSetInputPortWidth(S, 3, 2);
+    ssSetInputPortDirectFeedThrough(S, 3, TRUE);
+    ssSetInputPortRequiredContiguous(S, 3, TRUE);	
 
     ssSetInputPortDataType(S, 4, SS_DOUBLE);   
     ssSetInputPortWidth(S, 4, 1);
-    ssSetInputPortDirectFeedThrough(S, 4, 1);
-    ssSetInputPortRequiredContiguous(S, 4, 1);
+    ssSetInputPortDirectFeedThrough(S, 4, TRUE);
+    ssSetInputPortRequiredContiguous(S, 4, TRUE);
 
     ssSetInputPortDataType(S, 5, SS_DOUBLE);   
     ssSetInputPortWidth(S, 5, 1);
-    ssSetInputPortDirectFeedThrough(S, 5, 1);
-    ssSetInputPortRequiredContiguous(S, 5, 1);	
-
-    ssSetInputPortDataType(S, 6, SS_DOUBLE);   
-    ssSetInputPortWidth(S, 6, 1);
-    ssSetInputPortDirectFeedThrough(S, 6, 1);
-    ssSetInputPortRequiredContiguous(S, 6, 1);	
-
-    ssSetInputPortDataType(S, 7, SS_DOUBLE);   
-    ssSetInputPortWidth(S, 7, 1);
-    ssSetInputPortDirectFeedThrough(S, 7, 1);
-    ssSetInputPortRequiredContiguous(S, 7, 1);	
-
-    ssSetInputPortDataType(S, 8, SS_DOUBLE);   
-    ssSetInputPortWidth(S, 8, 1);
-    ssSetInputPortDirectFeedThrough(S, 8, 1);
-    ssSetInputPortRequiredContiguous(S, 8, 1);	
+    ssSetInputPortDirectFeedThrough(S, 5, TRUE);
+    ssSetInputPortRequiredContiguous(S, 5, TRUE);	
 
     /* 设置输出端口数量 */
-    if (!ssSetNumOutputPorts(S, 21)) return;
+    if (!ssSetNumOutputPorts(S, 10)) return;
 
     /* 配置输出端口 */
     ssSetOutputPortDataType(S, 0, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 0, 1);
+    ssSetOutputPortWidth(S, 0, 2);
     
     ssSetOutputPortDataType(S, 1, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 1, 1);
+    ssSetOutputPortWidth(S, 1, 2);
 
     ssSetOutputPortDataType(S, 2, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 2, 1);
+    ssSetOutputPortWidth(S, 2, 3);
     
     ssSetOutputPortDataType(S, 3, SS_DOUBLE);
     ssSetOutputPortWidth(S, 3, 1);
 
     ssSetOutputPortDataType(S, 4, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 4, 1);
+    ssSetOutputPortWidth(S, 4, 3);
 
     ssSetOutputPortDataType(S, 5, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 5, 1);
+    ssSetOutputPortWidth(S, 5, 2);
 
     ssSetOutputPortDataType(S, 6, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 6, 1);
+    ssSetOutputPortWidth(S, 6, 2);
 
     ssSetOutputPortDataType(S, 7, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 7, 1);
+    ssSetOutputPortWidth(S, 7, 2);
 
     ssSetOutputPortDataType(S, 8, SS_DOUBLE);
     ssSetOutputPortWidth(S, 8, 1);
 
     ssSetOutputPortDataType(S, 9, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 9, 1);
-
-    ssSetOutputPortDataType(S, 10, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 10, 1);
-
-    ssSetOutputPortDataType(S, 11, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 11, 1);
-
-    ssSetOutputPortDataType(S, 12, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 12, 1);
-
-    ssSetOutputPortDataType(S, 13, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 13, 1);
-
-    ssSetOutputPortDataType(S, 14, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 14, 1);
-
-    ssSetOutputPortDataType(S, 15, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 15, 1);
-
-    ssSetOutputPortDataType(S, 16, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 16, 1);
-
-    ssSetOutputPortDataType(S, 17, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 17, 1);
-
-    ssSetOutputPortDataType(S, 18, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 18, 1);
-
-    ssSetOutputPortDataType(S, 19, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 19, 1);
-
-    ssSetOutputPortDataType(S, 20, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 20, 1);
+    ssSetOutputPortWidth(S, 9, 4);
 }
 
 /* 模块采样时间初始化函敿 */
@@ -173,14 +125,11 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 static void mdlOutputs(SimStruct *S, int_T tid){
     /* 获取参数/输入/输出的数据 */
     real_T* iTheta = (real_T*) ssGetInputPortSignal(S, 0);
-    real_T* iId    = (real_T*) ssGetInputPortSignal(S, 1);
-    real_T* iIq    = (real_T*) ssGetInputPortSignal(S, 2);
-    real_T* iIa    = (real_T*) ssGetInputPortSignal(S, 3);
-    real_T* iIc    = (real_T*) ssGetInputPortSignal(S, 4);
-    real_T* iUd    = (real_T*) ssGetInputPortSignal(S, 5);
-    real_T* iUq    = (real_T*) ssGetInputPortSignal(S, 6);
-    real_T* iMode  = (real_T*) ssGetInputPortSignal(S, 7);
-    real_T* iSpd   = (real_T*) ssGetInputPortSignal(S, 8);
+    real_T* iIdq   = (real_T*) ssGetInputPortSignal(S, 1);
+    real_T* iIabc  = (real_T*) ssGetInputPortSignal(S, 2);
+    real_T* iUdq   = (real_T*) ssGetInputPortSignal(S, 3);
+    real_T* iMode  = (real_T*) ssGetInputPortSignal(S, 4);
+    real_T* iSpd   = (real_T*) ssGetInputPortSignal(S, 5);
     
     real_T* Np     = (real_T*) ssGetRunTimeParamInfo(S,  0)->data;
     real_T* CurKp  = (real_T*) ssGetRunTimeParamInfo(S,  1)->data;
@@ -200,27 +149,16 @@ static void mdlOutputs(SimStruct *S, int_T tid){
     real_T* ObsSpdKi  = (real_T*) ssGetRunTimeParamInfo(S,  15)->data;
     real_T* ObsTMax = (real_T*) ssGetRunTimeParamInfo(S,  16)->data;
 
-    real_T* oSinTheta = (real_T*) ssGetOutputPortSignal(S, 0);
-    real_T* oCosTheta = (real_T*) ssGetOutputPortSignal(S, 1);
-    real_T* oUx = (real_T*) ssGetOutputPortSignal(S, 2);
-    real_T* oUy = (real_T*) ssGetOutputPortSignal(S, 3);
-    real_T* oU1 = (real_T*) ssGetOutputPortSignal(S, 4);
-    real_T* oU2 = (real_T*) ssGetOutputPortSignal(S, 5);
-    real_T* oU3 = (real_T*) ssGetOutputPortSignal(S, 6);
-    real_T* oSector = (real_T*) ssGetOutputPortSignal(S, 7);
-    real_T* oCCRa = (real_T*) ssGetOutputPortSignal(S, 8);
-    real_T* oCCRb = (real_T*) ssGetOutputPortSignal(S, 9);
-    real_T* oCCRc = (real_T*) ssGetOutputPortSignal(S, 10);
-    real_T* oIx = (real_T*) ssGetOutputPortSignal(S, 11);
-    real_T* oIy = (real_T*) ssGetOutputPortSignal(S, 12);
-    real_T* oId = (real_T*) ssGetOutputPortSignal(S, 13);
-    real_T* oIq = (real_T*) ssGetOutputPortSignal(S, 14);
-    real_T* oUd = (real_T*) ssGetOutputPortSignal(S, 15);
-    real_T* oUq = (real_T*) ssGetOutputPortSignal(S, 16);
-    real_T* oSpd = (real_T*) ssGetOutputPortSignal(S, 17);
-    real_T* oObsSpdBef = (real_T*) ssGetOutputPortSignal(S, 18);
-    real_T* oObsSpd = (real_T*) ssGetOutputPortSignal(S, 19);
-    real_T* oObsTL = (real_T*) ssGetOutputPortSignal(S, 20);
+    real_T* oSinCosTheta = (real_T*) ssGetOutputPortSignal(S, 0);
+    real_T* oUxy = (real_T*) ssGetOutputPortSignal(S, 1);
+    real_T* oU123 = (real_T*) ssGetOutputPortSignal(S, 2);
+    real_T* oSector = (real_T*) ssGetOutputPortSignal(S, 3);
+    real_T* oCCRabc = (real_T*) ssGetOutputPortSignal(S, 4);
+    real_T* oIxy = (real_T*) ssGetOutputPortSignal(S, 5);
+    real_T* oIdq = (real_T*) ssGetOutputPortSignal(S, 6);
+    real_T* oUdq = (real_T*) ssGetOutputPortSignal(S, 7);
+    real_T* oSpd = (real_T*) ssGetOutputPortSignal(S, 8);
+    real_T* oObs = (real_T*) ssGetOutputPortSignal(S, 9);
 
     D_PI.Kp    = *CurKp;
     D_PI.Ki    = *CurKi;
@@ -249,46 +187,41 @@ static void mdlOutputs(SimStruct *S, int_T tid){
     CtrlCom.SpdTs = *SpdTs;
 
     MRT_Inf.Udc   = *Udc;
-    MRT_Inf.Theta = GetTheta((int32_t)*iTheta);
-    MRT_Inf.Ia = GetCur((int32_t)*iIa);
-    MRT_Inf.Ic = GetCur((int32_t)*iIc);
+    MRT_Inf.Theta = GetTheta((int32_t)iTheta[0]);
+    MRT_Inf.Ia = GetCur((int32_t)iIabc[0]);
+    MRT_Inf.Ic = GetCur((int32_t)iIabc[2]);
 
-    if(CtrlCom.Mode == 0){
-        CtrlCom.Ud = *iUd;
-        CtrlCom.Uq = *iUq;
-    }
-    else if(CtrlCom.Mode == 1){
-        CtrlCom.Id = *iId;
-        CtrlCom.Iq = *iIq;
-    }
-    else if(CtrlCom.Mode == 2){
-        CtrlCom.Spd = *iSpd;
-    }
+    // CtrlCom.Ud = iUdq[0];
+    // CtrlCom.Uq = iUdq[1];
+    // CtrlCom.Id = iIdq[0];
+    // CtrlCom.Iq = iIdq[1];
+    CtrlCom.Spd = iSpd[0];
     
     /* 调用函数接口 */
     FOC(&D_PI, &Q_PI, &Spd_PI, &CtrlCom, &MotorParameter, &MotorObserver, &MRT_Inf);
 
-    *oSinTheta = MRT_Inf.SinTheta;
-    *oCosTheta = MRT_Inf.CosTheta;
-    *oUx = MRT_Inf.Ux;
-    *oUy = MRT_Inf.Uy;
-    *oU1 = MRT_Inf.U1;
-    *oU2 = MRT_Inf.U2;
-    *oU3 = MRT_Inf.U3;
-    *oSector = MRT_Inf.Sector;
-    *oCCRa = MRT_Inf.CCRa;
-    *oCCRb = MRT_Inf.CCRb;
-    *oCCRc = MRT_Inf.CCRc;
-    *oIx = MRT_Inf.Ix;
-    *oIy = MRT_Inf.Iy;
-    *oId = MRT_Inf.Id;
-    *oIq = MRT_Inf.Iq;
-    *oUd = MRT_Inf.Ud;
-    *oUq = MRT_Inf.Uq;
-    *oSpd = MRT_Inf.Spd;
-    *oObsSpdBef = MotorObserver.Spd_Bef;
-    *oObsSpd = MotorObserver.Spd;
-    *oObsTL = MotorObserver.TL;
+    oSinCosTheta[0] = MRT_Inf.SinTheta;
+    oSinCosTheta[1] = MRT_Inf.CosTheta;
+    oUxy[0] = MRT_Inf.Ux;
+    oUxy[1] = MRT_Inf.Uy;
+    oU123[0] = MRT_Inf.U1;
+    oU123[1] = MRT_Inf.U2;
+    oU123[2] = MRT_Inf.U3;
+    oSector[0] = MRT_Inf.Sector;
+    oCCRabc[0] = MRT_Inf.CCRa;
+    oCCRabc[1] = MRT_Inf.CCRb;
+    oCCRabc[2] = MRT_Inf.CCRc;
+    oIxy[0] = MRT_Inf.Ix;
+    oIxy[1] = MRT_Inf.Iy;
+    oIdq[0] = MRT_Inf.Id;
+    oIdq[1] = MRT_Inf.Iq;
+    oUdq[0] = MRT_Inf.Ud;
+    oUdq[1] = MRT_Inf.Uq;
+    oSpd[0] = MRT_Inf.Spd;
+    oObs[0] = MotorObserver.Spd_Bef;
+    oObs[1] = MotorObserver.Spd;
+    oObs[2] = MotorObserver.TL;
+    oObs[3] = MotorObserver.Spd_PI.Error;
 }
 
 /* 用于存储全局变量和运行时参数，在确定端口的宽度和采样时间后调用 */

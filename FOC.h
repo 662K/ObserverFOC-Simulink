@@ -10,8 +10,7 @@ typedef struct{
     double Max;
     double up;
     double ui;
-    double Target;
-    double Present;
+    double Error;
     double Out_temp;
 }PI_str;
 
@@ -90,6 +89,8 @@ typedef struct{
 }MotorObserver_str;
 
 #define PI acos(-1)
+#define TRUE 1
+#define FALSE 0
 
 extern double GetTheta(int32_t Theta);
 extern double GetCur(int32_t Cur);
