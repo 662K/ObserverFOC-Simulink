@@ -103,7 +103,7 @@ static void mdlInitializeSizes(SimStruct *S)
     ssSetOutputPortWidth(S, 6, 2);
 
     ssSetOutputPortDataType(S, 7, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 7, 2);
+    ssSetOutputPortWidth(S, 7, 11);
 
     ssSetOutputPortDataType(S, 8, SS_DOUBLE);
     ssSetOutputPortWidth(S, 8, 1);
@@ -181,6 +181,7 @@ static void mdlOutputs(SimStruct *S, int_T tid){
     MotorParameter.Rs = *Rs;
     MotorParameter.Kt = *Kt;
     MotorParameter.J  = *J;
+    MotorParameter.Flux = MotorParameter.Kt / 1.5 / MotorParameter.Np;
 
     CtrlCom.Mode  = (uint8_t)(*iMode);
     CtrlCom.CurTs = *CurTs;
@@ -202,22 +203,40 @@ static void mdlOutputs(SimStruct *S, int_T tid){
 
     oSinCosTheta[0] = MRT_Inf.SinTheta;
     oSinCosTheta[1] = MRT_Inf.CosTheta;
+
     oUxy[0] = MRT_Inf.Ux;
     oUxy[1] = MRT_Inf.Uy;
+
     oU123[0] = MRT_Inf.U1;
     oU123[1] = MRT_Inf.U2;
     oU123[2] = MRT_Inf.U3;
+
     oSector[0] = MRT_Inf.Sector;
+
     oCCRabc[0] = MRT_Inf.CCRa;
     oCCRabc[1] = MRT_Inf.CCRb;
     oCCRabc[2] = MRT_Inf.CCRc;
+
     oIxy[0] = MRT_Inf.Ix;
     oIxy[1] = MRT_Inf.Iy;
+
     oIdq[0] = MRT_Inf.Id;
     oIdq[1] = MRT_Inf.Iq;
-    oUdq[0] = MRT_Inf.Ud;
-    oUdq[1] = MRT_Inf.Uq;
+
+    oUdq[0]  = MRT_Inf.Ud;
+    oUdq[1]  = MRT_Inf.Uq;
+    oUdq[2]  = MRT_Inf.Ud_qCoupling;
+    oUdq[3]  = MRT_Inf.Uq_dCoupling;
+    oUdq[4]  = MRT_Inf.Ud_Electrical;
+    oUdq[5]  = MRT_Inf.Uq_Electrical;
+    oUdq[6]  = MRT_Inf.EMF;
+    oUdq[7]  = MRT_Inf.Ud_ElectricalMaxUp;
+    oUdq[8]  = MRT_Inf.Ud_ElectricalMaxDown;
+    oUdq[9]  = MRT_Inf.Uq_ElectricalMaxUp;
+    oUdq[10] = MRT_Inf.Uq_ElectricalMaxDown;
+
     oSpd[0] = MRT_Inf.Spd;
+
     oObs[0] = MotorObserver.Spd_Bef;
     oObs[1] = MotorObserver.Spd;
     oObs[2] = MotorObserver.TL;

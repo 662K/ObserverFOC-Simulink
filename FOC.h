@@ -37,6 +37,7 @@ typedef struct{
     double Rs;
     double Kt;
     double J;
+    double Flux;
     uint8_t Np;
 }MotorParameter_str;
 
@@ -73,6 +74,19 @@ typedef struct{
 
     double Ud;
     double Uq;
+
+    double EMF;
+
+    double Ud_qCoupling;
+    double Uq_dCoupling;
+
+    double Ud_Electrical;
+    double Uq_Electrical;
+
+    double Ud_ElectricalMaxUp;
+    double Ud_ElectricalMaxDown;
+    double Uq_ElectricalMaxUp;
+    double Uq_ElectricalMaxDown;
 }MotorRealTimeInformation_str;
 
 typedef struct{

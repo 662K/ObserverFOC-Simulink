@@ -161,7 +161,7 @@ void SpeedLoopOri_Mode2(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlComma
 void SpeedLoopLuenbergerObeserver_Mode3(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_str* CtrlCom, MotorParameter_str* MotorParameter, MotorObserver_str* MotorObserver, MotorRealTimeInformation_str* MRT_Inf){
     D_PI->Ki *= CtrlCom->CurTs;
     Q_PI->Ki *= CtrlCom->CurTs;
-    Spd_PI->Ki *= CtrlCom->SpdTs;
+    Spd_PI->Ki *= CtrlCom->CurTs;
     MotorObserver->Spd_PI.Ki *= CtrlCom->SpdTs;
     
     CtrlCom->Id = 0;
@@ -184,7 +184,7 @@ void SpeedLoopLuenbergerObeserver_Mode3(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_
 void LoadTorqueObeserver_Mode4(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_str* CtrlCom, MotorParameter_str* MotorParameter, MotorObserver_str* MotorObserver, MotorRealTimeInformation_str* MRT_Inf){
     D_PI->Ki *= CtrlCom->CurTs;
     Q_PI->Ki *= CtrlCom->CurTs;
-    Spd_PI->Ki *= CtrlCom->SpdTs;
+    Spd_PI->Ki *= CtrlCom->CurTs;
     MotorObserver->Spd_PI.Ki *= CtrlCom->SpdTs;
     
     CtrlCom->Id = 0;
@@ -202,6 +202,54 @@ void LoadTorqueObeserver_Mode4(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, Contr
 
     MRT_Inf->Ud = PID_Control(D_PI, CtrlCom->Id, MRT_Inf->Id);
     MRT_Inf->Uq = PID_Control(Q_PI, CtrlCom->Iq - MotorObserver->TL / MotorParameter->Kt, MRT_Inf->Iq);
+}
+
+double PIMAX_Control(PI_str* pPI, double Target, double Present, double MaxUp, double MaxDown){
+    double Error = Target - Present;
+    uint8_t ui_flag = !(((pPI->Out_temp > MaxUp) || (pPI->Out_temp < MaxDown)) && (pPI->Out_temp * Error >= 0));
+    
+    pPI->up = pPI->Kp * Error;
+    pPI->ui = pPI->ui + pPI->Ki * Error * ui_flag;
+    
+    pPI->Out_temp = pPI->up + pPI->ui;
+    
+    double PIout = 0;
+    
+    if(pPI->Out_temp > MaxUp)
+        PIout = MaxUp;
+    else if(pPI->Out_temp < MaxDown)
+        PIout = MaxDown;
+    else 
+        PIout = pPI->Out_temp;
+    
+    return PIout;
+}
+
+void NewTest_Mode5(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_str* CtrlCom, MotorParameter_str* MotorParameter, MotorObserver_str* MotorObserver, MotorRealTimeInformation_str* MRT_Inf){
+    D_PI->Ki *= CtrlCom->CurTs;
+    Q_PI->Ki *= CtrlCom->CurTs;
+    Spd_PI->Ki *= CtrlCom->SpdTs;
+
+    if(CtrlCom->Spd_Tick == 0){
+        CtrlCom->Id = 0;
+        CtrlCom->Iq = PID_Control(Spd_PI, CtrlCom->Spd, MRT_Inf->Spd);
+    }
+    
+    MRT_Inf->Ud_qCoupling = -MRT_Inf->Spd * MotorParameter->Np * MRT_Inf->Iq * MotorParameter->Ls;
+    MRT_Inf->Uq_dCoupling =  MRT_Inf->Spd * MotorParameter->Np * MRT_Inf->Id * MotorParameter->Ls;
+
+    MRT_Inf->EMF = CtrlCom->Spd * MotorParameter->Np * MotorParameter->Flux;
+
+    MRT_Inf->Ud_ElectricalMaxUp   =  D_PI->Max - MRT_Inf->Ud_qCoupling;
+    MRT_Inf->Ud_ElectricalMaxDown = -D_PI->Max - MRT_Inf->Ud_qCoupling;
+    MRT_Inf->Uq_ElectricalMaxUp   =  Q_PI->Max - MRT_Inf->Uq_dCoupling - MRT_Inf->EMF;
+    MRT_Inf->Uq_ElectricalMaxDown = -Q_PI->Max - MRT_Inf->Uq_dCoupling - MRT_Inf->EMF;
+
+    MRT_Inf->Ud_Electrical = PIMAX_Control(D_PI, CtrlCom->Id, MRT_Inf->Id, MRT_Inf->Ud_ElectricalMaxUp, MRT_Inf->Ud_ElectricalMaxDown);
+    MRT_Inf->Uq_Electrical = PIMAX_Control(Q_PI, CtrlCom->Iq, MRT_Inf->Iq, MRT_Inf->Uq_ElectricalMaxUp, MRT_Inf->Uq_ElectricalMaxDown);
+
+    MRT_Inf->Ud = MRT_Inf->Ud_Electrical + MRT_Inf->Ud_qCoupling;
+    MRT_Inf->Uq = MRT_Inf->Uq_Electrical + MRT_Inf->Uq_dCoupling + MRT_Inf->EMF;
 }
 
 void FOC(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_str* CtrlCom, MotorParameter_str* MotorParameter, MotorObserver_str* MotorObserver, MotorRealTimeInformation_str* MRT_Inf){
@@ -222,6 +270,9 @@ void FOC(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_str* CtrlCom
     }
     else if(CtrlCom->Mode == 4){
         LoadTorqueObeserver_Mode4(D_PI, Q_PI, Spd_PI, CtrlCom, MotorParameter, MotorObserver, MRT_Inf);
+    }
+    else if(CtrlCom->Mode == 5){
+        NewTest_Mode5(D_PI, Q_PI, Spd_PI, CtrlCom, MotorParameter, MotorObserver, MRT_Inf);
     }
 
     InvPark(MRT_Inf->Ud, MRT_Inf->Uq, MRT_Inf->SinTheta, MRT_Inf->CosTheta, &MRT_Inf->Ux, &MRT_Inf->Uy);
