@@ -102,12 +102,24 @@ typedef struct{
     PI_str Spd_PI;
 }MotorObserver_str;
 
+typedef struct{
+    double Ix_Bef;
+    double Iy_Bef;
+    double Ex;
+    double Ey;
+    double Ix;
+    double Iy;
+    double Vx;
+    double Vy;
+    double h;
+}SlidingModeObserver_str;
+
 #define PI acos(-1)
 #define TRUE 1
 #define FALSE 0
 
 extern double GetTheta(int32_t Theta);
 extern double GetCur(int32_t Cur);
-extern void FOC(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_str* CtrlCom, MotorParameter_str* MotorParameter, MotorObserver_str* MotorObserver, MotorRealTimeInformation_str* MRT_Inf);
+extern void FOC(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_str* CtrlCom, MotorParameter_str* MotorParameter, MotorObserver_str* MotorObserver, MotorRealTimeInformation_str* MRT_Inf, SlidingModeObserver_str* SMO);
 
 #endif

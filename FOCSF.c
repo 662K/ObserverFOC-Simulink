@@ -11,6 +11,7 @@ ControlCommand_str CtrlCom = {0};
 MotorParameter_str MotorParameter = {0};
 MotorObserver_str MotorObserver = {0};
 MotorRealTimeInformation_str MRT_Inf = {0};
+SlidingModeObserver_str SMO = {0};
 
 /* 模块初始化函数 */
 static void mdlInitializeSizes(SimStruct *S)
@@ -22,6 +23,7 @@ static void mdlInitializeSizes(SimStruct *S)
     memset(&MotorParameter, 0, sizeof(MotorParameter));
     memset(&MotorObserver, 0, sizeof(MotorObserver));
     memset(&MRT_Inf, 0, sizeof(MRT_Inf));
+    memset(&SMO, 0, sizeof(SMO));
     /* 设置参数数量 */
     ssSetNumSFcnParams(S, 17);
 
@@ -78,38 +80,26 @@ static void mdlInitializeSizes(SimStruct *S)
     ssSetInputPortRequiredContiguous(S, 5, TRUE);	
 
     /* 设置输出端口数量 */
-    if (!ssSetNumOutputPorts(S, 10)) return;
+    if (!ssSetNumOutputPorts(S, 6)) return;
 
     /* 配置输出端口 */
     ssSetOutputPortDataType(S, 0, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 0, 2);
-    
+    ssSetOutputPortWidth(S, 0, 13);
+
     ssSetOutputPortDataType(S, 1, SS_DOUBLE);
     ssSetOutputPortWidth(S, 1, 2);
 
     ssSetOutputPortDataType(S, 2, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 2, 3);
-    
+    ssSetOutputPortWidth(S, 2, 11);
+
     ssSetOutputPortDataType(S, 3, SS_DOUBLE);
     ssSetOutputPortWidth(S, 3, 1);
 
     ssSetOutputPortDataType(S, 4, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 4, 3);
+    ssSetOutputPortWidth(S, 4, 5);
 
     ssSetOutputPortDataType(S, 5, SS_DOUBLE);
     ssSetOutputPortWidth(S, 5, 2);
-
-    ssSetOutputPortDataType(S, 6, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 6, 2);
-
-    ssSetOutputPortDataType(S, 7, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 7, 11);
-
-    ssSetOutputPortDataType(S, 8, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 8, 1);
-
-    ssSetOutputPortDataType(S, 9, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 9, 4);
 }
 
 /* 模块采样时间初始化函敿 */
@@ -149,16 +139,12 @@ static void mdlOutputs(SimStruct *S, int_T tid){
     real_T* ObsSpdKi  = (real_T*) ssGetRunTimeParamInfo(S,  15)->data;
     real_T* ObsTMax = (real_T*) ssGetRunTimeParamInfo(S,  16)->data;
 
-    real_T* oSinCosTheta = (real_T*) ssGetOutputPortSignal(S, 0);
-    real_T* oUxy = (real_T*) ssGetOutputPortSignal(S, 1);
-    real_T* oU123 = (real_T*) ssGetOutputPortSignal(S, 2);
-    real_T* oSector = (real_T*) ssGetOutputPortSignal(S, 3);
-    real_T* oCCRabc = (real_T*) ssGetOutputPortSignal(S, 4);
-    real_T* oIxy = (real_T*) ssGetOutputPortSignal(S, 5);
-    real_T* oIdq = (real_T*) ssGetOutputPortSignal(S, 6);
-    real_T* oUdq = (real_T*) ssGetOutputPortSignal(S, 7);
-    real_T* oSpd = (real_T*) ssGetOutputPortSignal(S, 8);
-    real_T* oObs = (real_T*) ssGetOutputPortSignal(S, 9);
+    real_T* oFOC = (real_T*) ssGetOutputPortSignal(S, 0);
+    real_T* oIdq = (real_T*) ssGetOutputPortSignal(S, 1);
+    real_T* oUdq = (real_T*) ssGetOutputPortSignal(S, 2);
+    real_T* oSpd = (real_T*) ssGetOutputPortSignal(S, 3);
+    real_T* oObs = (real_T*) ssGetOutputPortSignal(S, 4);
+    real_T* oSMO = (real_T*) ssGetOutputPortSignal(S, 5);
 
     D_PI.Kp    = *CurKp;
     D_PI.Ki    = *CurKi;
@@ -199,26 +185,21 @@ static void mdlOutputs(SimStruct *S, int_T tid){
     CtrlCom.Spd = iSpd[0];
     
     /* 调用函数接口 */
-    FOC(&D_PI, &Q_PI, &Spd_PI, &CtrlCom, &MotorParameter, &MotorObserver, &MRT_Inf);
+    FOC(&D_PI, &Q_PI, &Spd_PI, &CtrlCom, &MotorParameter, &MotorObserver, &MRT_Inf, &SMO);
 
-    oSinCosTheta[0] = MRT_Inf.SinTheta;
-    oSinCosTheta[1] = MRT_Inf.CosTheta;
-
-    oUxy[0] = MRT_Inf.Ux;
-    oUxy[1] = MRT_Inf.Uy;
-
-    oU123[0] = MRT_Inf.U1;
-    oU123[1] = MRT_Inf.U2;
-    oU123[2] = MRT_Inf.U3;
-
-    oSector[0] = MRT_Inf.Sector;
-
-    oCCRabc[0] = MRT_Inf.CCRa;
-    oCCRabc[1] = MRT_Inf.CCRb;
-    oCCRabc[2] = MRT_Inf.CCRc;
-
-    oIxy[0] = MRT_Inf.Ix;
-    oIxy[1] = MRT_Inf.Iy;
+    oFOC[0]  = MRT_Inf.SinTheta;
+    oFOC[1]  = MRT_Inf.CosTheta;
+    oFOC[2]  = MRT_Inf.Ux;
+    oFOC[3]  = MRT_Inf.Uy;
+    oFOC[4]  = MRT_Inf.U1;
+    oFOC[5]  = MRT_Inf.U2;
+    oFOC[6]  = MRT_Inf.U3;
+    oFOC[7]  = MRT_Inf.Sector;
+    oFOC[8]  = MRT_Inf.CCRa;
+    oFOC[9]  = MRT_Inf.CCRb;
+    oFOC[10] = MRT_Inf.CCRc;
+    oFOC[11] = MRT_Inf.Ix;
+    oFOC[12] = MRT_Inf.Iy;
 
     oIdq[0] = MRT_Inf.Id;
     oIdq[1] = MRT_Inf.Iq;
@@ -241,6 +222,10 @@ static void mdlOutputs(SimStruct *S, int_T tid){
     oObs[1] = MotorObserver.Spd;
     oObs[2] = MotorObserver.TL;
     oObs[3] = MotorObserver.Spd_PI.Error;
+    oObs[4] = MotorObserver.Theta;
+
+    oSMO[0] = SMO.Ix;
+    oSMO[1] = SMO.Iy;
 }
 
 /* 用于存储全局变量和运行时参数，在确定端口的宽度和采样时间后调用 */
