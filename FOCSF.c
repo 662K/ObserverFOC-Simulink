@@ -99,7 +99,7 @@ static void mdlInitializeSizes(SimStruct *S)
     ssSetOutputPortWidth(S, 4, 5);
 
     ssSetOutputPortDataType(S, 5, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 5, 2);
+    ssSetOutputPortWidth(S, 5, 7);
 }
 
 /* 模块采样时间初始化函敿 */
@@ -172,6 +172,8 @@ static void mdlOutputs(SimStruct *S, int_T tid){
     CtrlCom.Mode  = (uint8_t)(*iMode);
     CtrlCom.CurTs = *CurTs;
     CtrlCom.SpdTs = *SpdTs;
+    CtrlCom.CurFs = 1.0 / CtrlCom.CurTs;
+    CtrlCom.SpdFs = 1.0 / CtrlCom.SpdTs;
 
     MRT_Inf.Udc   = *Udc;
     MRT_Inf.Theta = GetTheta((int32_t)iTheta[0]);
@@ -226,6 +228,11 @@ static void mdlOutputs(SimStruct *S, int_T tid){
 
     oSMO[0] = SMO.Ix;
     oSMO[1] = SMO.Iy;
+    oSMO[2] = SMO.Ex;
+    oSMO[3] = SMO.Ey;
+    oSMO[4] = SMO.Flag;
+    oSMO[5] = SMO.SpdE;
+    oSMO[6] = SMO.ThetaE;
 }
 
 /* 用于存储全局变量和运行时参数，在确定端口的宽度和采样时间后调用 */
