@@ -89,6 +89,11 @@ typedef struct{
     double Ud_ElectricalMaxDown;
     double Uq_ElectricalMaxUp;
     double Uq_ElectricalMaxDown;
+
+    double Ex;
+    double Ey;
+
+    double ThetaE;
 }MotorRealTimeInformation_str;
 
 typedef struct{
@@ -121,6 +126,7 @@ typedef struct{
     double SinTheta;
     double CosTheta;
     double Flag;
+    double E0;
 }SlidingModeObserver_str;
 
 #define PI acos(-1)

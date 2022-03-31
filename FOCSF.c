@@ -84,7 +84,7 @@ static void mdlInitializeSizes(SimStruct *S)
 
     /* 配置输出端口 */
     ssSetOutputPortDataType(S, 0, SS_DOUBLE);
-    ssSetOutputPortWidth(S, 0, 13);
+    ssSetOutputPortWidth(S, 0, 16);
 
     ssSetOutputPortDataType(S, 1, SS_DOUBLE);
     ssSetOutputPortWidth(S, 1, 2);
@@ -202,6 +202,9 @@ static void mdlOutputs(SimStruct *S, int_T tid){
     oFOC[10] = MRT_Inf.CCRc;
     oFOC[11] = MRT_Inf.Ix;
     oFOC[12] = MRT_Inf.Iy;
+    oFOC[13] = MRT_Inf.Ex;
+    oFOC[14] = MRT_Inf.Ey;
+    oFOC[15] = MRT_Inf.ThetaE;
 
     oIdq[0] = MRT_Inf.Id;
     oIdq[1] = MRT_Inf.Iq;
@@ -230,9 +233,9 @@ static void mdlOutputs(SimStruct *S, int_T tid){
     oSMO[1] = SMO.Iy;
     oSMO[2] = SMO.Ex;
     oSMO[3] = SMO.Ey;
-    oSMO[4] = SMO.Flag;
+    oSMO[4] = SMO.de;
     oSMO[5] = SMO.SpdE;
-    oSMO[6] = SMO.ThetaE;
+    oSMO[6] = fmod(SMO.ThetaE, 2 * PI);
 }
 
 /* 用于存储全局变量和运行时参数，在确定端口的宽度和采样时间后调用 */
