@@ -118,7 +118,8 @@ typedef struct{
     double Iy;
     double Vx;
     double Vy;
-    double h;
+    double h1;
+    double h2;
     double de;
     PI_str SpdE_PI;
     double SpdE;
@@ -126,7 +127,14 @@ typedef struct{
     double SinTheta;
     double CosTheta;
     double Flag;
-    double E0;
+    double E1;
+    double E2;
+    double EMF_LPF_wc;
+    double Theta_PLL_wn;
+    double Theta_PLL_we;
+    double Theta_PLL_zeta;
+    double Spd_LPF_wc;
+    double Switch_Spd;
 }SlidingModeObserver_str;
 
 #define PI acos(-1)

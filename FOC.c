@@ -171,16 +171,28 @@ void SlidingModeObserver_Mode6(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, Contr
     Cordic(SMO->ThetaE, &(SMO->SinTheta), &(SMO->CosTheta));
     Clarke(MRT_Inf->Ia, MRT_Inf->Ic, &MRT_Inf->Ix, &MRT_Inf->Iy);
 
-    SlidingModeObserver2(CtrlCom, MotorParameter, MRT_Inf, SMO);
+    if(SMO->Flag == 0){
+        if((MRT_Inf->Spd > SMO->Switch_Spd) || (MRT_Inf->Spd < -SMO->Switch_Spd)){
+            SMO->Flag = 1;
+        }
+    }
+    else if(SMO->Flag == 1){
+        if((MRT_Inf->Spd < SMO->Switch_Spd * 0.5) && (MRT_Inf->Spd > -SMO->Switch_Spd * 0.5)){
+            SMO->Flag = 0;
+        }
+    }
 
-    if(MRT_Inf->Spd < 20)
+    if((MRT_Inf->Spd > SMO->Switch_Spd * 0.1) || (MRT_Inf->Spd < -SMO->Switch_Spd * 0.1))
+        SlidingModeObserver3(CtrlCom, MotorParameter, MRT_Inf, SMO);
+
+    if(SMO->Flag == 0)
         Park(MRT_Inf->Ix, MRT_Inf->Iy, MRT_Inf->SinTheta, MRT_Inf->CosTheta, &MRT_Inf->Id, &MRT_Inf->Iq);
     else
         Park(MRT_Inf->Ix, MRT_Inf->Iy, SMO->SinTheta, SMO->CosTheta, &MRT_Inf->Id, &MRT_Inf->Iq);
 
     CtrlCom->Id = 0;
 
-    if(MRT_Inf->Spd < 20){
+    if(SMO->Flag == 0){
         if(CtrlCom->Spd_Tick == 0){
             Spd_PI->Ki *= CtrlCom->SpdTs;
             CtrlCom->Iq = PID_Control(Spd_PI, CtrlCom->Spd, MRT_Inf->Spd);
@@ -190,18 +202,14 @@ void SlidingModeObserver_Mode6(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, Contr
         Spd_PI->Ki *= CtrlCom->CurTs;
         CtrlCom->Iq = PID_Control(Spd_PI, CtrlCom->Spd, SMO->SpdE / MotorParameter->Np);
     }
-        
 
     MRT_Inf->Ud = PID_Control(D_PI, CtrlCom->Id, MRT_Inf->Id);
     MRT_Inf->Uq = PID_Control(Q_PI, CtrlCom->Iq, MRT_Inf->Iq);
 
-    if(MRT_Inf->Spd < 20)
+    if(SMO->Flag == 0)
         InvPark(MRT_Inf->Ud, MRT_Inf->Uq, MRT_Inf->SinTheta, MRT_Inf->CosTheta, &MRT_Inf->Ux, &MRT_Inf->Uy);
     else
         InvPark(MRT_Inf->Ud, MRT_Inf->Uq, SMO->SinTheta, SMO->CosTheta, &MRT_Inf->Ux, &MRT_Inf->Uy);
-
-    SMO->Flag = (MRT_Inf->Spd > 20);
-    
 
     InvClarke(MRT_Inf->Ux, MRT_Inf->Uy, &MRT_Inf->U1, &MRT_Inf->U2, &MRT_Inf->U3);
     MRT_Inf->Sector = GetSector(MRT_Inf->U1, MRT_Inf->U2, MRT_Inf->U3);
@@ -220,7 +228,8 @@ void NewTest_Mode7(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_st
     Clarke(MRT_Inf->Ia, MRT_Inf->Ic, &MRT_Inf->Ix, &MRT_Inf->Iy);
     Park(MRT_Inf->Ix, MRT_Inf->Iy, MRT_Inf->SinTheta, MRT_Inf->CosTheta, &MRT_Inf->Id, &MRT_Inf->Iq);
 
-    SlidingModeObserver2(CtrlCom, MotorParameter, MRT_Inf, SMO);
+    if((MRT_Inf->Spd > SMO->Switch_Spd * 0.1) || (MRT_Inf->Spd < -SMO->Switch_Spd * 0.1))
+        SlidingModeObserver3(CtrlCom, MotorParameter, MRT_Inf, SMO);
 
     if(CtrlCom->Spd_Tick == 0){
         CtrlCom->Id = 0;
