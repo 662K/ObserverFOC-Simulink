@@ -168,8 +168,9 @@ void SlidingModeObserver_Mode6(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, Contr
     
     GetSpd(MRT_Inf->Theta, &CtrlCom->Theta_Pre, CtrlCom->Spd_Tick, &MRT_Inf->Spd, CtrlCom->SpdTs);
     Cordic(MRT_Inf->ThetaE, &MRT_Inf->SinTheta, &MRT_Inf->CosTheta);
-    Cordic(SMO->ThetaE, &(SMO->SinTheta), &(SMO->CosTheta));
     Clarke(MRT_Inf->Ia, MRT_Inf->Ic, &MRT_Inf->Ix, &MRT_Inf->Iy);
+
+    SMO->EMF_Flag = (CtrlCom->Spd < 0);
 
     if(SMO->Flag == 0){
         if((MRT_Inf->Spd > SMO->Switch_Spd) || (MRT_Inf->Spd < -SMO->Switch_Spd)){
@@ -177,12 +178,12 @@ void SlidingModeObserver_Mode6(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, Contr
         }
     }
     else if(SMO->Flag == 1){
-        if((MRT_Inf->Spd < SMO->Switch_Spd * 0.5) && (MRT_Inf->Spd > -SMO->Switch_Spd * 0.5)){
+        if((MRT_Inf->Spd < SMO->Switch_Spd * 0.1) && (MRT_Inf->Spd > -SMO->Switch_Spd * 0.1)){
             SMO->Flag = 0;
         }
     }
 
-    if((MRT_Inf->Spd > SMO->Switch_Spd * 0.1) || (MRT_Inf->Spd < -SMO->Switch_Spd * 0.1))
+    // if((MRT_Inf->Spd > SMO->Switch_Spd * 0.1) || (MRT_Inf->Spd < -SMO->Switch_Spd * 0.1))
         SlidingModeObserver3(CtrlCom, MotorParameter, MRT_Inf, SMO);
 
     if(SMO->Flag == 0)
@@ -227,6 +228,20 @@ void NewTest_Mode7(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_st
     Cordic(MRT_Inf->ThetaE, &MRT_Inf->SinTheta, &MRT_Inf->CosTheta);
     Clarke(MRT_Inf->Ia, MRT_Inf->Ic, &MRT_Inf->Ix, &MRT_Inf->Iy);
     Park(MRT_Inf->Ix, MRT_Inf->Iy, MRT_Inf->SinTheta, MRT_Inf->CosTheta, &MRT_Inf->Id, &MRT_Inf->Iq);
+
+    if(SMO->Flag == 0){
+        if((MRT_Inf->Spd > SMO->Switch_Spd) || (MRT_Inf->Spd < -SMO->Switch_Spd)){
+            SMO->Flag = 1;
+        }
+        if((MRT_Inf->Spd > SMO->Switch_Spd * 0.1) || (MRT_Inf->Spd < -SMO->Switch_Spd * 0.1)){
+            SMO->EMF_Flag = (MRT_Inf->Spd < 0);
+        }
+    }
+    else if(SMO->Flag == 1){
+        if((MRT_Inf->Spd < SMO->Switch_Spd * 0.1) && (MRT_Inf->Spd > -SMO->Switch_Spd * 0.1)){
+            SMO->Flag = 0;
+        }
+    }
 
     if((MRT_Inf->Spd > SMO->Switch_Spd * 0.1) || (MRT_Inf->Spd < -SMO->Switch_Spd * 0.1))
         SlidingModeObserver3(CtrlCom, MotorParameter, MRT_Inf, SMO);

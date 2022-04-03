@@ -48,7 +48,7 @@ static void mdlInitializeSizes(SimStruct *S)
     if (!ssSetNumOutputPorts(S, OutputPortNum)) return;
 
     /* 配置输出端口 */
-    int OutputPortWidth[OutputPortNum] = {16, 2, 11, 1, 5, 9};
+    int OutputPortWidth[OutputPortNum] = {16, 2, 11, 1, 5, 10};
     for(int i = 0; i < OutputPortNum; i++){
         ssSetOutputPortDataType(S, i, SS_DOUBLE);
         ssSetOutputPortWidth(S, i, OutputPortWidth[i]);
@@ -186,6 +186,7 @@ static void mdlOutputs(SimStruct *S, int_T tid){
     oSMO[6] = SMO.ThetaE;
     oSMO[7] = SMO.Flag;
     oSMO[8] = Spd_PI.ui;
+    oSMO[9] = SMO.ThetaE2;
 }
 
 /* 用于存储全局变量和运行时参数，在确定端口的宽度和采样时间后调用 */

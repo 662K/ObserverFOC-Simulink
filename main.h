@@ -135,6 +135,8 @@ typedef struct{
     double Theta_PLL_zeta;
     double Spd_LPF_wc;
     double Switch_Spd;
+    double ThetaE2;
+    double EMF_Flag;
 }SlidingModeObserver_str;
 
 #define PI acos(-1)

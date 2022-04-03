@@ -106,14 +106,14 @@ void SlidingModeObserver(ControlCommand_str* CtrlCom, MotorParameter_str* MotorP
     MRT_Inf->Ex = -MRT_Inf->EMF * MRT_Inf->SinTheta;
     MRT_Inf->Ey =  MRT_Inf->EMF * MRT_Inf->CosTheta;
 
-    SMO->Vx = SMO->h1 * ((SMO->Ix > MRT_Inf->Ix)?(1):(-1));
-    SMO->Vy = SMO->h1 * ((SMO->Iy > MRT_Inf->Iy)?(1):(-1));
+    SMO->Vx = SMOSwitchFunction1(SMO->E1, SMO->Ix - MRT_Inf->Ix);
+    SMO->Vy = SMOSwitchFunction1(SMO->E1, SMO->Iy - MRT_Inf->Iy);
 
-    SMO->Ix = SMO->Ix + CtrlCom->CurTs * (-MotorParameter->Rs * SMO->Ix + MRT_Inf->Ux - SMO->Vx) / MotorParameter->Ls;
-    SMO->Iy = SMO->Iy + CtrlCom->CurTs * (-MotorParameter->Rs * SMO->Iy + MRT_Inf->Uy - SMO->Vy) / MotorParameter->Ls;
+    SMO->Ix = SMO->Ix + CtrlCom->CurTs * (-MotorParameter->Rs * SMO->Ix + MRT_Inf->Ux - SMO->h1 * SMO->Vx) / MotorParameter->Ls;
+    SMO->Iy = SMO->Iy + CtrlCom->CurTs * (-MotorParameter->Rs * SMO->Iy + MRT_Inf->Uy - SMO->h1 * SMO->Vy) / MotorParameter->Ls;
 
-    LPF(&(SMO->Ex), SMO->Vx, CtrlCom->CurFs, 250 * 2 * PI);
-    LPF(&(SMO->Ey), SMO->Vy, CtrlCom->CurFs, 250 * 2 * PI);
+    LPF(&(SMO->Ex), SMO->h1 * SMO->Vx, CtrlCom->CurFs, 250 * 2 * PI);
+    LPF(&(SMO->Ey), SMO->h1 * SMO->Vy, CtrlCom->CurFs, 250 * 2 * PI);
 
     Cordic(SMO->ThetaE, &(SMO->SinTheta), &(SMO->CosTheta));
 
@@ -123,9 +123,18 @@ void SlidingModeObserver(ControlCommand_str* CtrlCom, MotorParameter_str* MotorP
 
     SMO->de = -SMO->Ex * SMO->CosTheta - SMO->Ey * SMO->SinTheta;
 
-    double SpdE = PID_Control(&(SMO->SpdE_PI), -SMO->Ex * SMO->CosTheta, SMO->Ey * SMO->SinTheta);
+    if(SMO->EMF_Flag)
+        SMO->de = -SMO->de;
+
+    double SpdE = PID_Control_Err(&(SMO->SpdE_PI), SMO->de);
     LPF(&(SMO->SpdE), SpdE, CtrlCom->CurFs, 250 * 2 * PI);
-    SMO->ThetaE = SMO->ThetaE + SMO->SpdE * CtrlCom->CurTs;
+    
+    double ThetaE_temp = SMO->ThetaE + SpdE * CtrlCom->CurTs;
+    if(ThetaE_temp < 0)
+        ThetaE_temp += 2 * PI;
+    SMO->ThetaE = fmod(ThetaE_temp, 2 * PI);
+    SMO->ThetaE2 = atan2(-MRT_Inf->Ex , MRT_Inf->Ey);
+    SMO->de = (-SMO->Ex * SMO->SinTheta + SMO->Ey * SMO->CosTheta);
 }
 
 void SlidingModeObserver2(ControlCommand_str* CtrlCom, MotorParameter_str* MotorParameter, MotorRealTimeInformation_str* MRT_Inf, SlidingModeObserver_str* SMO){
@@ -144,7 +153,7 @@ void SlidingModeObserver2(ControlCommand_str* CtrlCom, MotorParameter_str* Motor
 
     Cordic(SMO->ThetaE, &(SMO->SinTheta), &(SMO->CosTheta));
 
-    if(((-SMO->Ex * SMO->SinTheta + SMO->Ey * SMO->CosTheta) < 2) && ((-SMO->Ex * SMO->SinTheta + SMO->Ey * SMO->CosTheta) > -2)){
+    if(((-SMO->Ex * SMO->SinTheta + SMO->Ey * SMO->CosTheta) < SMO->Switch_Spd * MotorParameter->Np * MotorParameter->Flux) && ((-SMO->Ex * SMO->SinTheta + SMO->Ey * SMO->CosTheta) > -SMO->Switch_Spd * MotorParameter->Np * MotorParameter->Flux)){
         SMO->SpdE_PI.Kp = 2 * SMO->Theta_PLL_zeta * SMO->Theta_PLL_wn / MotorParameter->Flux / SMO->Theta_PLL_we;
         SMO->SpdE_PI.Ki = SMO->Theta_PLL_wn * SMO->Theta_PLL_wn / MotorParameter->Flux / SMO->Theta_PLL_we * CtrlCom->CurTs;
         SMO->SpdE_PI.Max = 2 * PI * 200 * MotorParameter->Np;
@@ -159,7 +168,13 @@ void SlidingModeObserver2(ControlCommand_str* CtrlCom, MotorParameter_str* Motor
 
     double SpdE = PID_Control_Err(&(SMO->SpdE_PI), SMO->de);
     LPF(&(SMO->SpdE), SpdE, CtrlCom->CurFs, SMO->Spd_LPF_wc);
-    SMO->ThetaE = SMO->ThetaE + SpdE * CtrlCom->CurTs;
+
+    double ThetaE_temp = SMO->ThetaE + SpdE * CtrlCom->CurTs;
+    if(ThetaE_temp < 0)
+        ThetaE_temp += 2 * PI;
+    SMO->ThetaE = fmod(ThetaE_temp, 2 * PI);
+    SMO->ThetaE2 = atan2(-SMO->Ex, SMO->Ey);
+    SMO->de = (-SMO->Ex * SMO->SinTheta + SMO->Ey * SMO->CosTheta);
 }
 
 void SlidingModeObserver3(ControlCommand_str* CtrlCom, MotorParameter_str* MotorParameter, MotorRealTimeInformation_str* MRT_Inf, SlidingModeObserver_str* SMO){
@@ -170,28 +185,29 @@ void SlidingModeObserver3(ControlCommand_str* CtrlCom, MotorParameter_str* Motor
     SMO->Vx = SMOSwitchFunction1(SMO->E1, SMO->Ix - MRT_Inf->Ix);
     SMO->Vy = SMOSwitchFunction1(SMO->E1, SMO->Iy - MRT_Inf->Iy);
 
-    SMO->Ix = SMO->Ix + CtrlCom->CurTs * (MRT_Inf->Ux - MotorParameter->Rs * SMO->Ix - SMO->Ex - SMO->h1 * SMO->Vx) / MotorParameter->Ls;
-    SMO->Iy = SMO->Iy + CtrlCom->CurTs * (MRT_Inf->Uy - MotorParameter->Rs * SMO->Iy - SMO->Ey - SMO->h1 * SMO->Vy) / MotorParameter->Ls;
+    SMO->Ix = SMO->Ix + CtrlCom->CurTs * (MRT_Inf->Ux - MotorParameter->Rs * SMO->Ix - 1 * SMO->Ex - SMO->h1 * SMO->Vx) / MotorParameter->Ls;
+    SMO->Iy = SMO->Iy + CtrlCom->CurTs * (MRT_Inf->Uy - MotorParameter->Rs * SMO->Iy - 1 * SMO->Ey - SMO->h1 * SMO->Vy) / MotorParameter->Ls;
 
     SMO->Ex = SMO->Ex + CtrlCom->CurTs * (-SMO->SpdE * SMO->Ey + SMO->h2 * SMO->Vx / MotorParameter->Ls);
     SMO->Ey = SMO->Ey + CtrlCom->CurTs * ( SMO->SpdE * SMO->Ex + SMO->h2 * SMO->Vy / MotorParameter->Ls);
 
     Cordic(SMO->ThetaE, &(SMO->SinTheta), &(SMO->CosTheta));
+    
+    SMO->SpdE_PI.Kp = 2 * SMO->Theta_PLL_zeta * SMO->Theta_PLL_wn;
+    SMO->SpdE_PI.Ki = SMO->Theta_PLL_wn * SMO->Theta_PLL_wn * CtrlCom->CurTs;
+    SMO->SpdE_PI.Max = 2 * PI * 500 * MotorParameter->Np;
 
     SMO->de = -SMO->Ex * SMO->SinTheta + SMO->Ey * SMO->CosTheta;
 
-    // if((SMO->de < SMO->Switch_Spd * MotorParameter->Np * MotorParameter->Flux) && (SMO->de > -SMO->Switch_Spd * MotorParameter->Np * MotorParameter->Flux)){
-    //     SMO->SpdE_PI.Kp = 2 * SMO->Theta_PLL_zeta * SMO->Theta_PLL_wn / MotorParameter->Flux / SMO->Theta_PLL_we;
-    //     SMO->SpdE_PI.Ki = SMO->Theta_PLL_wn * SMO->Theta_PLL_wn / MotorParameter->Flux / SMO->Theta_PLL_we * CtrlCom->CurTs;
-    //     SMO->SpdE_PI.Max = 2 * PI * 200 * MotorParameter->Np;
-    //     SMO->de = (-SMO->Ex * SMO->CosTheta - SMO->Ey * SMO->SinTheta);
-    // }
-    {
-        SMO->SpdE_PI.Kp = 2 * SMO->Theta_PLL_zeta * SMO->Theta_PLL_wn;
-        SMO->SpdE_PI.Ki = SMO->Theta_PLL_wn * SMO->Theta_PLL_wn * CtrlCom->CurTs;
-        SMO->SpdE_PI.Max = 2 * PI * 200 * MotorParameter->Np;
-        SMO->de = (-SMO->Ex * SMO->CosTheta - SMO->Ey * SMO->SinTheta) / (-SMO->Ex * SMO->SinTheta + SMO->Ey * SMO->CosTheta);
+    if((SMO->de < SMO->Switch_Spd * MotorParameter->Np * MotorParameter->Flux) && (SMO->de > -SMO->Switch_Spd * MotorParameter->Np * MotorParameter->Flux)){
+        SMO->de = (-SMO->Ex * SMO->CosTheta - SMO->Ey * SMO->SinTheta) / SMO->Switch_Spd * MotorParameter->Np * MotorParameter->Flux;
     }
+    else{
+        SMO->de = (-SMO->Ex * SMO->CosTheta - SMO->Ey * SMO->SinTheta) / sqrt(SMO->Ex * SMO->Ex + SMO->Ey * SMO->Ey);
+    }
+
+    if(SMO->EMF_Flag)
+        SMO->de = -SMO->de;
 
     double SpdE = PID_Control_Err(&(SMO->SpdE_PI), SMO->de);
     LPF(&(SMO->SpdE), SpdE, CtrlCom->CurFs, SMO->Spd_LPF_wc);
@@ -200,5 +216,6 @@ void SlidingModeObserver3(ControlCommand_str* CtrlCom, MotorParameter_str* Motor
     if(ThetaE_temp < 0)
         ThetaE_temp += 2 * PI;
     SMO->ThetaE = fmod(ThetaE_temp, 2 * PI);
+    SMO->ThetaE2 = atan2(-SMO->Ex, SMO->Ey);
     SMO->de = (-SMO->Ex * SMO->SinTheta + SMO->Ey * SMO->CosTheta);
 }
