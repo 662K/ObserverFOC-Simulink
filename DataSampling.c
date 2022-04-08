@@ -26,3 +26,22 @@ void GetSpd(double Theta, double* Theta_Pre, uint8_t Spd_Tick, double* Speed, do
         *Theta_Pre = Theta;
     }
 }
+
+void CtrlComFilter(double *Target, double CtrlCom, double TickAdd){
+    if(*Target < CtrlCom){
+        if(*Target + TickAdd > CtrlCom){
+            *Target = CtrlCom;
+        }
+        else{
+            *Target += TickAdd;
+        }
+    }
+    else if(*Target > CtrlCom){
+        if(*Target - TickAdd < CtrlCom){
+            *Target = CtrlCom;
+        }
+        else{
+            *Target -= TickAdd;
+        }
+    }          
+}

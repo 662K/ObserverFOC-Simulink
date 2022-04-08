@@ -36,7 +36,7 @@ static void mdlInitializeSizes(SimStruct *S)
     if (!ssSetNumInputPorts(S, InputPortNum)) return;
 
     /* 配置输入端口 */
-    int InputPortWidth[InputPortNum] = {1, 3, 10, 3, 10};
+    int InputPortWidth[InputPortNum] = {1, 3, 11, 3, 10};
     for(int i = 0; i < InputPortNum; i++){
         ssSetInputPortDataType(S, i, SS_DOUBLE);   
         ssSetInputPortDirectFeedThrough(S, i, TRUE);
@@ -132,7 +132,7 @@ static void mdlOutputs(SimStruct *S, int_T tid){
     MRT_Inf.Ia = GetCur((int32_t)iIabc[0]);
     MRT_Inf.Ic = GetCur((int32_t)iIabc[2]);
 
-    CtrlCom.Spd = iCtrlParam[9];
+    CtrlComFilter(&CtrlCom.Spd, iCtrlParam[9], iCtrlParam[10]);
     
     /* 调用函数接口 */
     FOC(&D_PI, &Q_PI, &Spd_PI, &CtrlCom, &MotorParameter, &MotorObserver, &MRT_Inf, &SMO);
@@ -171,7 +171,7 @@ static void mdlOutputs(SimStruct *S, int_T tid){
 
     oSpd[0] = MRT_Inf.Spd;
 
-    oObs[0] = MotorObserver.Spd_Bef;
+    oObs[0] = CtrlCom.Spd;
     oObs[1] = MotorObserver.Spd;
     oObs[2] = MotorObserver.TL;
     oObs[3] = MotorObserver.Spd_PI.Error;

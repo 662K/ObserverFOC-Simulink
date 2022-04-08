@@ -195,7 +195,7 @@ void SlidingModeObserver3(ControlCommand_str* CtrlCom, MotorParameter_str* Motor
     
     SMO->SpdE_PI.Kp = 2 * SMO->Theta_PLL_zeta * SMO->Theta_PLL_wn;
     SMO->SpdE_PI.Ki = SMO->Theta_PLL_wn * SMO->Theta_PLL_wn * CtrlCom->CurTs;
-    SMO->SpdE_PI.Max = 2 * PI * 500 * MotorParameter->Np;
+    SMO->SpdE_PI.Max = 2 * PI * 250 * MotorParameter->Np;
 
     SMO->de = -SMO->Ex * SMO->SinTheta + SMO->Ey * SMO->CosTheta;
 

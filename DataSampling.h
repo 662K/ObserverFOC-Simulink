@@ -7,5 +7,6 @@ extern double GetTheta(int32_t Theta);
 extern double GetCur(int32_t Cur);
 extern double GetThetaE(double ThetaE, uint8_t Np);
 extern void GetSpd(double Theta, double* Theta_Pre, uint8_t Spd_Tick, double* Speed, double SpdTs);
+extern void CtrlComFilter(double *Target, double CtrlCom, double TickAdd);
 
 #endif
