@@ -3,10 +3,10 @@
 
 #include "main.h"
 
-extern double GetTheta(int32_t Theta);
-extern double GetCur(int32_t Cur);
-extern double GetThetaE(double ThetaE, uint8_t Np);
-extern void GetSpd(double Theta, double* Theta_Pre, uint8_t Spd_Tick, double* Speed, double SpdTs);
-extern void CtrlComFilter(double *Target, double CtrlCom, double TickAdd);
+extern float GetTheta(int32_t Theta);
+extern float GetCur(int32_t Cur);
+extern float GetThetaE(float ThetaE, uint8_t Np);
+extern void GetSpd(float Theta, float* Theta_Pre, uint8_t Spd_Tick, float* Speed, float SpdTs);
+extern void CtrlComFilter(float *Target, float CtrlCom, float TickAdd);
 
 #endif

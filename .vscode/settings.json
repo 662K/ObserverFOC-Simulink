@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "dataprocessing.h": "c",
-        "focsub.h": "c"
+        "focsub.h": "c",
+        "foc.h": "c",
+        "main.h": "c"
     }
 }

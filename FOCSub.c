@@ -1,22 +1,22 @@
 #include "FOCSub.h"
 
-void Cordic(double ThetaE, double* SinTheta, double* CosTheta){
+void Cordic(float ThetaE, float* SinTheta, float* CosTheta){
     *SinTheta = sin(ThetaE);
     *CosTheta = cos(ThetaE);
 }
 
-void InvPark(double Ud, double Uq, double SinTheta, double CosTheta, double* Ux, double* Uy){
+void InvPark(float Ud, float Uq, float SinTheta, float CosTheta, float* Ux, float* Uy){
     *Ux = CosTheta * Ud - SinTheta * Uq;
     *Uy = SinTheta * Ud + CosTheta * Uq;
 }
 
-void InvClarke(double Ux, double Uy, double* U1, double* U2, double* U3){
+void InvClarke(float Ux, float Uy, float* U1, float* U2, float* U3){
     *U1 =  Uy;
     *U2 =  Ux * 0.866 - Uy * 0.5;
     *U3 = -Ux * 0.866 - Uy * 0.5;
 }
 
-uint8_t GetSector(double U1, double U2, double U3){
+uint8_t GetSector(float U1, float U2, float U3){
     uint8_t N = ((U3 >= 0) << 2) | ((U2 >= 0) << 1) | ((U1 >= 0) << 0);
     uint8_t Sector;
 
@@ -31,10 +31,10 @@ uint8_t GetSector(double U1, double U2, double U3){
     return Sector;
 }
 
-void GetCCR(double U1, double U2, double U3, uint8_t Sector, double Udc, double* CCRa, double* CCRb, double* CCRc){
-    double Tx, Ty;
-    double Ta, Tb, Tc;
-    double K = Udc / 1.732;
+void GetCCR(float U1, float U2, float U3, uint8_t Sector, float Udc, float* CCRa, float* CCRb, float* CCRc){
+    float Tx, Ty;
+    float Ta, Tb, Tc;
+    float K = Udc / 1.732;
     switch(Sector){
     case 1: Tx =  U2 / K; Ty =  U1 / K; break;
     case 2: Tx = -U2 / K; Ty = -U3 / K; break;
@@ -57,12 +57,12 @@ void GetCCR(double U1, double U2, double U3, uint8_t Sector, double Udc, double*
     }
 }
 
-void Clarke(double Ia, double Ic, double* Ix, double* Iy){
+void Clarke(float Ia, float Ic, float* Ix, float* Iy){
     *Ix = Ia;
     *Iy = -((Ia + Ic *2)*0.57735);
 }
 
-void Park(double Ix, double Iy, double SinTheta, double CosTheta, double* Id, double* Iq){
+void Park(float Ix, float Iy, float SinTheta, float CosTheta, float* Id, float* Iq){
     *Id = SinTheta * Iy + CosTheta * Ix;
     *Iq = CosTheta * Iy - SinTheta * Ix;
 }

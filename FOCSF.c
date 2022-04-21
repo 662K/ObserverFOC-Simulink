@@ -3,6 +3,7 @@
 
 #include "simstruc.h"
 #include "FOC.h"
+#include "DataSampling.h"
 
 PI_str D_PI  = {0};
 PI_str Q_PI  = {0};

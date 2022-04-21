@@ -5,138 +5,138 @@
 #include <stdint.h>
 
 typedef struct{
-    double Kp;
-    double Ki;
-    double Max;
-    double up;
-    double ui;
-    double Error;
-    double Out_temp;
+    float Kp;
+    float Ki;
+    float Max;
+    float up;
+    float ui;
+    float Error;
+    float Out_temp;
 }PI_str;
 
 typedef struct{
     uint8_t Spd_Tick;
-    double Theta_Pre;
+    float Theta_Pre;
     
-    double Spd;
+    float Spd;
 
-    double Id;
-    double Iq;
+    float Id;
+    float Iq;
 
-    double CurTs;
-    double SpdTs;
-    double CurFs;
-    double SpdFs;
+    float CurTs;
+    float SpdTs;
+    float CurFs;
+    float SpdFs;
 
-    double Ud;
-    double Uq;
+    float Ud;
+    float Uq;
 
     uint8_t Mode;
 }ControlCommand_str;
 
 typedef struct{
-    double Ls;
-    double Rs;
-    double Kt;
-    double J;
-    double Flux;
+    float Ls;
+    float Rs;
+    float Kt;
+    float J;
+    float Flux;
     uint8_t Np;
 }MotorParameter_str;
 
 typedef struct{
-    double Theta;
-    double Spd;
+    float Theta;
+    float Spd;
 
-    double Udc;
+    float Udc;
 
-    double SinTheta;
-    double CosTheta; 
+    float SinTheta;
+    float CosTheta; 
 
-    double Ux;       
-    double Uy;
+    float Ux;       
+    float Uy;
 
-    double U1;    
-    double U2;   
-    double U3;       
+    float U1;    
+    float U2;   
+    float U3;       
 
     uint8_t Sector;
 
-    double CCRa;
-    double CCRb; 
-    double CCRc;
+    float CCRa;
+    float CCRb; 
+    float CCRc;
 
-    double Ia;
-    double Ic;
+    float Ia;
+    float Ic;
 
-    double Ix;       
-    double Iy;
+    float Ix;       
+    float Iy;
 
-    double Id;
-    double Iq;
+    float Id;
+    float Iq;
 
-    double Ud;
-    double Uq;
+    float Ud;
+    float Uq;
 
-    double EMF;
+    float EMF;
 
-    double Ud_qCoupling;
-    double Uq_dCoupling;
+    float Ud_qCoupling;
+    float Uq_dCoupling;
 
-    double Ud_Electrical;
-    double Uq_Electrical;
+    float Ud_Electrical;
+    float Uq_Electrical;
 
-    double Ud_ElectricalMaxUp;
-    double Ud_ElectricalMaxDown;
-    double Uq_ElectricalMaxUp;
-    double Uq_ElectricalMaxDown;
+    float Ud_ElectricalMaxUp;
+    float Ud_ElectricalMaxDown;
+    float Uq_ElectricalMaxUp;
+    float Uq_ElectricalMaxDown;
 
-    double Ex;
-    double Ey;
+    float Ex;
+    float Ey;
 
-    double ThetaE;
+    float ThetaE;
 }MotorRealTimeInformation_str;
 
 typedef struct{
-    double Te;
-    double TL;
-    double Acc;
-    double Spd;
-    double Spd_Temp;
-    double Spd_Bef;
-    double Spd_Pre;
-    double Theta;
-    double Theta_Pre;
+    float Te;
+    float TL;
+    float Acc;
+    float Spd;
+    float Spd_Temp;
+    float Spd_Bef;
+    float Spd_Pre;
+    float Theta;
+    float Theta_Pre;
     PI_str Spd_PI;
 }MotorObserver_str;
 
 typedef struct{
-    double Ix_Bef;
-    double Iy_Bef;
-    double Ex;
-    double Ey;
-    double Ix;
-    double Iy;
-    double Vx;
-    double Vy;
-    double h1;
-    double h2;
-    double de;
+    float Ix_Bef;
+    float Iy_Bef;
+    float Ex;
+    float Ey;
+    float Ix;
+    float Iy;
+    float Vx;
+    float Vy;
+    float h1;
+    float h2;
+    float de;
     PI_str SpdE_PI;
-    double SpdE;
-    double ThetaE;
-    double SinTheta;
-    double CosTheta;
-    double Flag;
-    double E1;
-    double E2;
-    double EMF_LPF_wc;
-    double Theta_PLL_wn;
-    double Theta_PLL_we;
-    double Theta_PLL_zeta;
-    double Spd_LPF_wc;
-    double Switch_Spd;
-    double ThetaE2;
-    double EMF_Flag;
+    float SpdE;
+    float ThetaE;
+    float SinTheta;
+    float CosTheta;
+    float Flag;
+    float E1;
+    float E2;
+    float EMF_LPF_wc;
+    float Theta_PLL_wn;
+    float Theta_PLL_we;
+    float Theta_PLL_zeta;
+    float Spd_LPF_wc;
+    float Switch_Spd;
+    float ThetaE2;
+    float EMF_Flag;
 }SlidingModeObserver_str;
 
 #define PI acos(-1)

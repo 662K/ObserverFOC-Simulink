@@ -3,13 +3,13 @@
 
 #include "main.h"
 
-extern void Cordic(double ThetaE, double* SinTheta, double* CosTheta);
-extern void InvPark(double Ud, double Uq, double SinTheta, double CosTheta, double* Ux, double* Uy);
-extern void InvClarke(double Ux, double Uy, double* U1, double* U2, double* U3);
-extern uint8_t GetSector(double U1, double U2, double U3);
-extern void GetCCR(double U1, double U2, double U3, uint8_t Sector, double Udc, double* CCRa, double* CCRb, double* CCRc);
-extern void Clarke(double Ia, double Ic, double* Ix, double* Iy);
-extern void Park(double Ix, double Iy, double SinTheta, double CosTheta, double* Id, double* Iq);
+extern void Cordic(float ThetaE, float* SinTheta, float* CosTheta);
+extern void InvPark(float Ud, float Uq, float SinTheta, float CosTheta, float* Ux, float* Uy);
+extern void InvClarke(float Ux, float Uy, float* U1, float* U2, float* U3);
+extern uint8_t GetSector(float U1, float U2, float U3);
+extern void GetCCR(float U1, float U2, float U3, uint8_t Sector, float Udc, float* CCRa, float* CCRb, float* CCRc);
+extern void Clarke(float Ia, float Ic, float* Ix, float* Iy);
+extern void Park(float Ix, float Iy, float SinTheta, float CosTheta, float* Id, float* Iq);
 extern void Spd_Timer(uint8_t* Spd_Tick);
 
 #endif

@@ -1,7 +1,7 @@
 #include "DataProcessing.h"
 
-double PID_Control(PI_str* pPI, double Target, double Present){
-    double Error = Target - Present;
+float PID_Control(PI_str* pPI, float Target, float Present){
+    float Error = Target - Present;
     uint8_t ui_flag = !(((pPI->Out_temp > pPI->Max) || (pPI->Out_temp < -pPI->Max)) && (pPI->Out_temp * Error >= 0));
     
     pPI->up = pPI->Kp * Error;
@@ -9,7 +9,7 @@ double PID_Control(PI_str* pPI, double Target, double Present){
     
     pPI->Out_temp = pPI->up + pPI->ui;
     
-    double PIout = 0;
+    float PIout = 0;
     
     if(pPI->Out_temp > pPI->Max)
         PIout = pPI->Max;
@@ -21,7 +21,7 @@ double PID_Control(PI_str* pPI, double Target, double Present){
     return PIout;
 }
 
-double PID_Control_Err(PI_str* pPI, double Error){
+float PID_Control_Err(PI_str* pPI, float Error){
     uint8_t ui_flag = !(((pPI->Out_temp > pPI->Max) || (pPI->Out_temp < -pPI->Max)) && (pPI->Out_temp * Error >= 0));
     
     pPI->up = pPI->Kp * Error;
@@ -29,7 +29,7 @@ double PID_Control_Err(PI_str* pPI, double Error){
     
     pPI->Out_temp = pPI->up + pPI->ui;
     
-    double PIout = 0;
+    float PIout = 0;
     
     if(pPI->Out_temp > pPI->Max)
         PIout = pPI->Max;
@@ -41,7 +41,7 @@ double PID_Control_Err(PI_str* pPI, double Error){
     return PIout;
 }
 
-double ObsPID_Control(PI_str* pPI, double Target, double Present){
+float ObsPID_Control(PI_str* pPI, float Target, float Present){
     pPI->Error = Target-Present;
 
     uint8_t ui_flag = !(((pPI->Out_temp > pPI->Max) || (pPI->Out_temp < -pPI->Max)) && (pPI->Out_temp * pPI->Error >= 0));
@@ -51,7 +51,7 @@ double ObsPID_Control(PI_str* pPI, double Target, double Present){
     
     pPI->Out_temp = pPI->up + pPI->ui;
     
-    double PIout = 0;
+    float PIout = 0;
     
     if(pPI->Out_temp > pPI->Max)
         PIout = pPI->Max;
@@ -63,8 +63,8 @@ double ObsPID_Control(PI_str* pPI, double Target, double Present){
     return PIout;
 }
 
-double PIMAX_Control(PI_str* pPI, double Target, double Present, double MaxUp, double MaxDown){
-    double Error = Target - Present;
+float PIMAX_Control(PI_str* pPI, float Target, float Present, float MaxUp, float MaxDown){
+    float Error = Target - Present;
     uint8_t ui_flag = !(((pPI->Out_temp > MaxUp) || (pPI->Out_temp < MaxDown)) && (pPI->Out_temp * Error >= 0));
     
     pPI->up = pPI->Kp * Error;
@@ -72,7 +72,7 @@ double PIMAX_Control(PI_str* pPI, double Target, double Present, double MaxUp, d
     
     pPI->Out_temp = pPI->up + pPI->ui;
     
-    double PIout = 0;
+    float PIout = 0;
     
     if(pPI->Out_temp > MaxUp)
         PIout = MaxUp;
@@ -84,12 +84,12 @@ double PIMAX_Control(PI_str* pPI, double Target, double Present, double MaxUp, d
     return PIout;
 }
 
-void LPF(double* Uo, double Ui, double Fs, double Wc){
+void LPF(float* Uo, float Ui, float Fs, float Wc){
     *Uo = *Uo + Wc / Fs * (Ui - *Uo);
 }
 
-double SMOSwitchFunction1(double E, double Error){
-    double SF_Out;
+float SMOSwitchFunction1(float E, float Error){
+    float SF_Out;
 
     if(Error > E)
         SF_Out = 1.0;
@@ -126,10 +126,10 @@ void SlidingModeObserver(ControlCommand_str* CtrlCom, MotorParameter_str* MotorP
     if(SMO->EMF_Flag)
         SMO->de = -SMO->de;
 
-    double SpdE = PID_Control_Err(&(SMO->SpdE_PI), SMO->de);
+    float SpdE = PID_Control_Err(&(SMO->SpdE_PI), SMO->de);
     LPF(&(SMO->SpdE), SpdE, CtrlCom->CurFs, 250 * 2 * PI);
     
-    double ThetaE_temp = SMO->ThetaE + SpdE * CtrlCom->CurTs;
+    float ThetaE_temp = SMO->ThetaE + SpdE * CtrlCom->CurTs;
     if(ThetaE_temp < 0)
         ThetaE_temp += 2 * PI;
     SMO->ThetaE = fmod(ThetaE_temp, 2 * PI);
@@ -166,10 +166,10 @@ void SlidingModeObserver2(ControlCommand_str* CtrlCom, MotorParameter_str* Motor
         SMO->de = (-SMO->Ex * SMO->CosTheta - SMO->Ey * SMO->SinTheta) / (-SMO->Ex * SMO->SinTheta + SMO->Ey * SMO->CosTheta) *2;
     }
 
-    double SpdE = PID_Control_Err(&(SMO->SpdE_PI), SMO->de);
+    float SpdE = PID_Control_Err(&(SMO->SpdE_PI), SMO->de);
     LPF(&(SMO->SpdE), SpdE, CtrlCom->CurFs, SMO->Spd_LPF_wc);
 
-    double ThetaE_temp = SMO->ThetaE + SpdE * CtrlCom->CurTs;
+    float ThetaE_temp = SMO->ThetaE + SpdE * CtrlCom->CurTs;
     if(ThetaE_temp < 0)
         ThetaE_temp += 2 * PI;
     SMO->ThetaE = fmod(ThetaE_temp, 2 * PI);
@@ -200,7 +200,7 @@ void SlidingModeObserver3(ControlCommand_str* CtrlCom, MotorParameter_str* Motor
     SMO->de = -SMO->Ex * SMO->SinTheta + SMO->Ey * SMO->CosTheta;
 
     if((SMO->de < SMO->Switch_Spd * MotorParameter->Np * MotorParameter->Flux) && (SMO->de > -SMO->Switch_Spd * MotorParameter->Np * MotorParameter->Flux)){
-        SMO->de = (-SMO->Ex * SMO->CosTheta - SMO->Ey * SMO->SinTheta) / SMO->Switch_Spd * MotorParameter->Np * MotorParameter->Flux;
+        SMO->de = (-SMO->Ex * SMO->CosTheta - SMO->Ey * SMO->SinTheta) / (SMO->Switch_Spd * MotorParameter->Np * MotorParameter->Flux);
     }
     else{
         SMO->de = (-SMO->Ex * SMO->CosTheta - SMO->Ey * SMO->SinTheta) / sqrt(SMO->Ex * SMO->Ex + SMO->Ey * SMO->Ey);
@@ -209,10 +209,10 @@ void SlidingModeObserver3(ControlCommand_str* CtrlCom, MotorParameter_str* Motor
     if(SMO->EMF_Flag)
         SMO->de = -SMO->de;
 
-    double SpdE = PID_Control_Err(&(SMO->SpdE_PI), SMO->de);
+    float SpdE = PID_Control_Err(&(SMO->SpdE_PI), SMO->de);
     LPF(&(SMO->SpdE), SpdE, CtrlCom->CurFs, SMO->Spd_LPF_wc);
 
-    double ThetaE_temp = SMO->ThetaE + SpdE * CtrlCom->CurTs;
+    float ThetaE_temp = SMO->ThetaE + SpdE * CtrlCom->CurTs;
     if(ThetaE_temp < 0)
         ThetaE_temp += 2 * PI;
     SMO->ThetaE = fmod(ThetaE_temp, 2 * PI);

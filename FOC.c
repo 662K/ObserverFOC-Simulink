@@ -145,8 +145,8 @@ void SpdTLObserverWithVolDecoupling_Mode5(PI_str* D_PI, PI_str* Q_PI, PI_str* Sp
     MRT_Inf->Uq_ElectricalMaxUp   =  Q_PI->Max - MRT_Inf->Uq_dCoupling - MRT_Inf->EMF;
     MRT_Inf->Uq_ElectricalMaxDown = -Q_PI->Max - MRT_Inf->Uq_dCoupling - MRT_Inf->EMF;
 
-    double TargetId = CtrlCom->Id;
-    double TargetIq = CtrlCom->Iq - MotorObserver->TL / MotorParameter->Kt;
+    float TargetId = CtrlCom->Id;
+    float TargetIq = CtrlCom->Iq - MotorObserver->TL / MotorParameter->Kt;
 
     MRT_Inf->Ud_Electrical = PIMAX_Control(D_PI, TargetId, MRT_Inf->Id, MRT_Inf->Ud_ElectricalMaxUp, MRT_Inf->Ud_ElectricalMaxDown);
     MRT_Inf->Uq_Electrical = PIMAX_Control(Q_PI, TargetIq, MRT_Inf->Iq, MRT_Inf->Uq_ElectricalMaxUp, MRT_Inf->Uq_ElectricalMaxDown);
@@ -229,22 +229,7 @@ void NewTest_Mode7(PI_str* D_PI, PI_str* Q_PI, PI_str* Spd_PI, ControlCommand_st
     Clarke(MRT_Inf->Ia, MRT_Inf->Ic, &MRT_Inf->Ix, &MRT_Inf->Iy);
     Park(MRT_Inf->Ix, MRT_Inf->Iy, MRT_Inf->SinTheta, MRT_Inf->CosTheta, &MRT_Inf->Id, &MRT_Inf->Iq);
 
-    if(SMO->Flag == 0){
-        if((MRT_Inf->Spd > SMO->Switch_Spd) || (MRT_Inf->Spd < -SMO->Switch_Spd)){
-            SMO->Flag = 1;
-        }
-        if((MRT_Inf->Spd > SMO->Switch_Spd * 0.1) || (MRT_Inf->Spd < -SMO->Switch_Spd * 0.1)){
-            SMO->EMF_Flag = (MRT_Inf->Spd < 0);
-        }
-    }
-    else if(SMO->Flag == 1){
-        if((MRT_Inf->Spd < SMO->Switch_Spd * 0.1) && (MRT_Inf->Spd > -SMO->Switch_Spd * 0.1)){
-            SMO->Flag = 0;
-        }
-    }
-
-    if((MRT_Inf->Spd > SMO->Switch_Spd * 0.1) || (MRT_Inf->Spd < -SMO->Switch_Spd * 0.1))
-        SlidingModeObserver3(CtrlCom, MotorParameter, MRT_Inf, SMO);
+    SlidingModeObserver(CtrlCom, MotorParameter, MRT_Inf, SMO);
 
     if(CtrlCom->Spd_Tick == 0){
         CtrlCom->Id = 0;

@@ -1,20 +1,20 @@
 #include "DataSampling.h"
 
-double GetTheta(int32_t Theta){
+float GetTheta(int32_t Theta){
     return 2 * PI * Theta / (1 << 20);
 }
 
-double GetCur(int32_t Cur){
+float GetCur(int32_t Cur){
     return 5.0 * (Cur - 2048) / (1 << 11);
 }
 
-double GetThetaE(double ThetaE, uint8_t Np){
-    return fmod((ThetaE * (double)Np), (2.0 * PI));
+float GetThetaE(float ThetaE, uint8_t Np){
+    return fmod((ThetaE * (float)Np), (2.0 * PI));
 }
 
-void GetSpd(double Theta, double* Theta_Pre, uint8_t Spd_Tick, double* Speed, double SpdTs){
+void GetSpd(float Theta, float* Theta_Pre, uint8_t Spd_Tick, float* Speed, float SpdTs){
     if(Spd_Tick == 0){
-        double Speed_temp = Theta - *Theta_Pre;
+        float Speed_temp = Theta - *Theta_Pre;
         if(Speed_temp > 0.314)
             Speed_temp = Speed_temp - 2*PI;
         else if(Speed_temp < -0.314)
@@ -27,7 +27,7 @@ void GetSpd(double Theta, double* Theta_Pre, uint8_t Spd_Tick, double* Speed, do
     }
 }
 
-void CtrlComFilter(double *Target, double CtrlCom, double TickAdd){
+void CtrlComFilter(float *Target, float CtrlCom, float TickAdd){
     if(*Target < CtrlCom){
         if(*Target + TickAdd > CtrlCom){
             *Target = CtrlCom;
